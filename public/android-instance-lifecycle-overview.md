@@ -3,8 +3,9 @@ title: Android アプリにおけるインスタンスの生存期間とスコ�
 tags:
   - Android
   - lifecycle
+  - Hilt
 private: false
-updated_at: '2025-03-05T16:25:33+09:00'
+updated_at: '2025-03-05T16:37:45+09:00'
 id: c39f565eade4563ffa43
 organization_url_name: null
 slide: false
