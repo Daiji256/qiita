@@ -176,7 +176,9 @@ object SampleRouteModule {
     fun providesSampleRoute(savedStateHandle: SavedStateHandle): SampleRoute =
         savedStateHandle.toRoute<SampleRoute>()
 }
+```
 
+```kotlin
 @HiltViewModel
 class SampleViewModel @Inject constructor(
     route: SampleRoute,
