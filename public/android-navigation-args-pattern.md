@@ -20,9 +20,9 @@ ignorePublish: false
 
 Navigation Compose 2.8.0 以降では、シリアル化可能なクラスを利用することで、型安全に引数を画面間で受け渡すことが可能になりました。
 
-本記事では、特に引数の受け取り方法に焦点を当てて比較検討を行います。Navigation Compose 2.8.0 以降と Hilt の利用環境を想定したサンプルコードを提示しますが、応用することでその他の環境でも参考になるかと思います。
+本記事では、特にその**引数の受け取り方法**に焦点を当て、様々なアプローチを比較検討します。Navigation Compose 2.8.0 以降と Hilt の利用環境を想定したサンプルコードを提示しますが、これらを応用することでその他の環境でも参考になるかと思います。
 
-Navigation Compose 2.8.0 の画面遷移については、Android Developers の公式ドキュメントをご参照ください。
+Navigation Compose 2.8.0 での画面遷移の詳細については、Android Developers の公式ドキュメントをご参照ください。
 
 https://developer.android.com/guide/navigation/design/type-safety
 
