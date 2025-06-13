@@ -16,9 +16,9 @@ ignorePublish: false
 
 ## はじめに
 
-Navigation Compose 2.8.0 以降では、シリアル化可能なクラスを利用することで、型安全に引数を画面間で受け渡すことが可能になりました。
+Navigation Compose 2.8.0 以降では、シリアル化可能なクラスを用いて、型安全に画面間で引数を受け渡すことが可能になりました。
 
-本記事では、特にその**引数の受け取り方法**に焦点を当て、様々なアプローチを比較検討します。Navigation Compose 2.8.0 以降と Hilt の利用環境を想定したサンプルコードを提示しますが、これらを応用することでその他の環境でも参考になるかと思います。
+本記事では、特に**引数の受け取り方法**に焦点を当て、複数の実装方法を比較検討します。Navigation Compose 2.8.0 以降と Hilt の利用環境を想定したサンプルコードを提示しますが、これらを応用することでその他の環境でも参考になるかと思います。
 
 Navigation Compose 2.8.0 での画面遷移の詳細については、Android Developers の公式ドキュメントをご参照ください。
 
@@ -59,7 +59,7 @@ fun NavGraphBuilder.sample() {
 }
 ```
 
-### `NavBackStackEntry` から受け取った `route` を ViewModel で扱うために
+### `route` を ViewModel に渡す方法
 
 #### Composable から ViewModel のメソッドを呼び出すことで渡す
 
@@ -98,7 +98,7 @@ Dagger の Assisted Injection を利用することで、ViewModel のコンス�
 
 Assisted Injection を利用するには、Factory インターフェースを定義し、それを ViewModel と Composable の両方で扱う必要があります。普段から Assisted Injection を利用している開発者にとっては慣れた手法ですが、そうでない場合はその設定に手間や難しさを感じるかもしれません。
 
-この方法は、`SavedStateHandle` も介さずテストも用意です。また、どこで何が渡されているかが明確なため、ある意味では最も簡単ともいえます。
+この方法は、`SavedStateHandle` も介さずテストも用意です。また、引数の流れが明確になるため、設計上も理解しやすい手法です。
 
 ```kotlin
 @HiltViewModel(assistedFactory = SampleViewModel.Factory::class)
@@ -133,7 +133,7 @@ Composable を介さずに ViewModel 側で直接引数を受け取ることも�
 
 `SavedStateHandle.toRoute()` は内部で `android.os.Bundle` を利用しているため、ユニットテストでは注意が必要です。`android.os.Bundle` は Android フレームワークのクラスであり、JVM 単体ではテストできません。JVM 上でシミュレートするために Robolectric が必要になります。また、`savedStateHandle["arg"] = "dummy"` のように引数を指定する必要があるため、人によっては違和感を持つかもしれません。
 
-この方法は、今回紹介する方法の中で最もコード量が少ないです。実装時の作業コストを懸念する方には適しています。
+今回紹介する方法の中では、最もコード量が少ない実装です。実装時の作業コストを懸念する方には適しています。
 
 ```kotlin
 @HiltViewModel
@@ -166,7 +166,7 @@ class SampleViewModelTest {
 
 具体的には、`SavedStateHandle.toRoute()` を実行する Hilt Module を定義します。これにより、ViewModel は `Route` を直接インジェクトできるため、ViewModel が `android.os.Bundle` に依存せず、ユニットテストをより簡単に記述できるようになります。
 
-このために Module を定義する手間を煩わしいと感じる開発者もいると思います。一方で、Hilt の扱いに慣れた開発者にとっては一番単純な方法とも言えます。
+このために Module を定義する手間が気になる方もいるかもしれません。一方で、Hilt の扱いに慣れた開発者にとっては一番単純な方法とも言えます。
 
 ```kotlin
 @Module
@@ -189,8 +189,8 @@ class SampleViewModel @Inject constructor(
 
 ## さいごに
 
-ここで紹介した方法が全てではありませんし、特定のベストプラクティが存在するわけでもありません。プロジェクトの要件や開発チームの慣習によって、最適な方法は異なります。
+ここで紹介した方法は一例であり、特定のベストプラクティスがあるわけではありません。プロジェクトの要件や開発チームの慣習によって、最適な方法は異なります。
 
-また、今後リリースが予定されている Navigation 3 では画面遷移が大きく変更されます。Navigation 3 は Composable を主軸に置いています。この記事で言えば、序盤に紹介した方法がスタンダードになるかもしれません。
+また、今後リリースが予定されている Navigation 3 では画面遷移が大きく変更されます。Navigation 3 は Composable を主軸に置いています。本記事で紹介した中では、特に序盤の方法が今後の標準的なアプローチになる可能性があります。
 
 この記事が、Navigation Compose での引数受け取り方法を検討するときの参考になれば幸いです。
