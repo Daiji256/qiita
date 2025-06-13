@@ -1,5 +1,5 @@
 ---
-title: Navigation Compose での引数の受け取り方を比較
+title: Navigation Compose での引数の受け取り方 4 選と比較
 tags:
   - Android
   - Kotlin
