@@ -57,9 +57,9 @@ fun NavGraphBuilder.sample() {
 
 ### `route` を ViewModel に渡す方法
 
-#### Composable から ViewModel のメソッドを呼び出すことで渡す
+#### Composable から ViewModel の関数を呼び出すことで渡す
 
-最も単純な方法として、Composable から ViewModel のメソッドを呼び出す方法があります。以下の例では `LifecycleEventEffect` を利用し、`ON_CREATE` イベントのタイミングで ViewModel に `route` を渡しています。しかし、この方法では `ViewModel` の初期化後に `route` を取得することになるため、`route` が初期化に必須な場合には適していません。また、`route` を受け取るまでの ViewModel の状態も考慮する必要があります。
+最も単純な方法として、Composable から ViewModel の関数を呼び出す方法があります。以下の例では `LifecycleEventEffect` を利用し、`ON_CREATE` イベントのタイミングで ViewModel に `route` を渡しています。しかし、この方法では `ViewModel` の初期化後に `route` を取得することになるため、`route` が初期化に必須な場合には適していません。また、`route` を受け取るまでの ViewModel の状態も考慮する必要があります。
 
 一方で、Composable 側で初期化のタイミングやライフサイクルを制御したい場合には適している方法です。
 
@@ -182,6 +182,17 @@ class SampleViewModel @Inject constructor(
     val arg = route.arg
 }
 ```
+
+## 比較まとめ
+
+ViewModel で引数を利用する場合について、比較するとこのようになります。
+
+| 方法               | 初期化タイミング | テストのしやすさ          | 実装の手間            |
+| ------------------ | ---------------- | ------------------------- | --------------------- |
+| 関数呼び出し       | 遅延初期化       | ✅ 初期化を制御可能       | 🟡 関数呼び出しが必要 |
+| Assisted Injection | 即時初期化       | ✅ 依存性注入でテスト容易 | 🟡 Factory が必要     |
+| SavedStateHandle   | 即時初期化       | ⚠️ Bundle に依存          | 🟢 最小の実装量       |
+| Hiltで provides    | 即時初期化       | ✅ 依存性注入でテスト容易 | 🟡 Module が必要      |
 
 ## さいごに
 
