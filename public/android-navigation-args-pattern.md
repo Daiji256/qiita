@@ -16,23 +16,23 @@ ignorePublish: false
 
 ## はじめに
 
-Navigation Compose 2.8.0 からシリアル化可能なクラスを使うことで、型安全に引数の受け渡しが可能になりました。
+Navigation Compose 2.8.0 以降では、シリアル化可能なクラスを利用することで、型安全に引数を画面間で受け渡すことが可能になりました。
 
-詳しくは Android Developers を参照してください。
+本記事では、特に引数の受け取り方法に焦点を当てて比較検討を行います。Navigation Compose 2.8.0 以降と Hilt の利用環境を想定したサンプルコードを提示しますが、応用することでその他の環境でも参考になるかと思います。
+
+Navigation Compose 2.8.0 の画面遷移については、Android Developers の公式ドキュメントをご参照ください。
 
 https://developer.android.com/guide/navigation/design/type-safety
 
-ここでは、引数の受け取り方法に注目し比較します。Navigation Compose 2.8.0 以上と Hilt の利用環境を想定して、サンプルコードを紹介します。うまく応用すればそれ以外の環境でも参考になります。
-
-ここで紹介するコードは、以下のコードを参考に作っています。
+ここで紹介するコードは、以下のリポジトリのコードを元に作成しています。
 
 https://github.com/Daiji256/android-showcase/tree/5eec36161350c0bd5f9a82718abbcb389b48e25a/feature/navigationarguments/src/main/kotlin/io/github/daiji256/showcase/feature/navigationarguments
 
 ## 画面遷移に引数を渡す方法
 
-引数を渡すには、`class` もしくは `data class` で定義されたシリアル化可能な `Route` を利用します。`NavController.navigate()` に `Route` を渡すことで、画面遷移が実行されます。
+引数を渡すには、`class` もしくは `data class` で定義されたシリアル化可能な `Route` クラスを利用します。`route` を `NavController.navigate()` メソッドに渡すことで、画面遷移を実行します。
 
-```Kotlin:TODO 説明などをあとで書く
+```kotlin
 @Serializable
 data class SampleRoute(val arg: String)
 
@@ -48,9 +48,9 @@ fun NavController.navigateToSample(arg: String) =
 
 ## `NavBackStackEntry` からの受け取り
 
-直接的に引数を受け取る方法として、`NavBackStackEntry` を利用する方法があります。`NavGraphBuilder.composable()` の `content` で受け取る `NavBackStackEntry` から画面遷移時に渡した `Route` を受け取ることで、引数受け取りをします。
+直接的に引数を受け取る方法として、`NavBackStackEntry` を利用する方法があります。`NavGraphBuilder.composable()` の `content` ラムダで受け取る `NavBackStackEntry` から、画面遷移時に渡された `route` を抽出することで引数を受け取ります。
 
-```Kotlin
+```kotlin
 fun NavGraphBuilder.sample() {
     composable<SampleRoute> { entry ->
         val route = entry.toRoute<SampleRoute>()
@@ -59,13 +59,13 @@ fun NavGraphBuilder.sample() {
 }
 ```
 
-### `NavBackStackEntry` からの受け取った `Route` を ViewModel で扱うために
+### `NavBackStackEntry` から受け取った `route` を ViewModel で扱うために
 
 #### Composable から ViewModel のメソッドを呼び出すことで渡す
 
-最も単純な方法として、Composable から ViewModel のメソッドを呼び出す方法があります。以下の例では `LifecycleEventEffect` により `onCreate` のタイミングで ViewModel に `route` を渡しています。しかし、この方法では、`ViewModel` の初期化の後に `route` を取得することになります。`route` が初期化に必要な場合は向いていません。また、`route` を受け取るまでの状態も意識する必要があります。
+最も単純な方法として、Composable から ViewModel のメソッドを呼び出す方法があります。以下の例では `LifecycleEventEffect` を利用し、`ON_CREATE` イベントのタイミングで ViewModel に `route` を渡しています。しかし、この方法では `ViewModel` の初期化後に `route` を取得することになるため、`route` が初期化に必須な場合には適していません。また、`route` を受け取るまでの ViewModel の状態も考慮する必要があります。
 
-```Kotlin
+```kotlin
 @Composable
 fun SampleScreen(
     route: SampleRoute,
@@ -78,7 +78,7 @@ fun SampleScreen(
 }
 ```
 
-```Kotlin
+```kotlin
 @HiltViewModel
 class SampleViewModel @Inject constructor() : ViewModel() {
     private val _arg = MutableStateFlow<String?>(null)
@@ -90,16 +90,16 @@ class SampleViewModel @Inject constructor() : ViewModel() {
 }
 ```
 
-#### ViewModel のインスタンス作成時に渡す
+#### ViewModel のインスタンス作成時に渡す (Assisted Injection)
 
-Dagger には Assisted Injection により、一部を Dagger による依存解決、もう一部を手動によって引数を受け取ることができます。それを使うことで、ViewModel の初期化時には `route` を取得できています。
+Dagger の Assisted Injection を利用することで、ViewModel のコンストラクタで一部の依存関係を Dagger による依存解決に任せつつ、別の引数を手動で受け取ることが可能です。これにより、ViewModel の初期化時に `route` を取得することができます。
 
-Assisted Injection では Factory を定義し、それを生成される側とする側の両方で扱う必要があります。普段から Assisted Injection を使っている場合は慣れたものだと思いますが、人によってはその手間が大変・難しいと感じるかもしれません。
+Assisted Injection を利用するには、Factory インターフェースを定義し、それを ViewModel と Composable の両方で扱う必要があります。普段から Assisted Injection を利用している開発者にとっては慣れた手法ですが、そうでない場合はその設定に手間や難しさを感じるかもしれません。
 
-```Kotlin
+```kotlin
 @HiltViewModel(assistedFactory = SampleViewModel.Factory::class)
 class SampleViewModel @AssistedInject constructor(
-  @Assisted route: SampleRoute,
+    @Assisted route: SampleRoute,
 ) : ViewModel() {
     val arg = route.arg
 
@@ -110,7 +110,7 @@ class SampleViewModel @AssistedInject constructor(
 }
 ```
 
-```Kotlin
+```kotlin
 @Composable
 fun SampleScreen(
     route: SampleRoute,
@@ -125,11 +125,11 @@ fun SampleScreen(
 
 ### ViewModel で `SavedStateHandle` から受け取る
 
-Composable をかえさず ViewModel 側で引数を受け取ることもできます。`SavedStateHandle.toRoute()` を使うことで、`route` を受け取ることができます。
+Composable を介さずに ViewModel 側で直接引数を受け取ることも可能です。`SavedStateHandle.toRoute()` を使用することで、`route` を取得できます。
 
-`SavedStateHandle.toRoute()` は `android.os.Bundle` を利用しているため、注意が必要です。具体的には、そのまま Unit Test を実行できません。Unit Test のためには Robolectric が必要になります。また、`savedStateHandle["arg"] = "dummy"` のように引数を指定する必要があるため、人によっては違和感があるかもしれません。
+`SavedStateHandle.toRoute()` は内部で `android.os.Bundle` を利用しているため、ユニットテストでは注意が必要です。ユニットテストでは Robolectric が必要になります。また、`savedStateHandle["arg"] = "dummy"` のように引数を指定する必要があるため、人によっては違和感を持つかもしれません。
 
-```Kotlin
+```kotlin
 @HiltViewModel
 class SampleViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
@@ -139,13 +139,13 @@ class SampleViewModel @Inject constructor(
 }
 ```
 
-```Kotlin
-@RunWith(RobolectricTestRunner::class)
+```kotlin
+@RunWith(RobolectricTestRunner::class) // Robolectric が必要
 class SampleViewModelTest {
     @Test
     fun test_dummy_arg() {
         val savedStateHandle = SavedStateHandle()
-        savedStateHandle["arg"] = "dummy"
+        savedStateHandle["arg"] = "dummy" // Route のキーに合わせて引数を指定
         val viewModel = SampleViewModel(
             savedStateHandle = savedStateHandle,
         )
@@ -154,15 +154,15 @@ class SampleViewModelTest {
 }
 ```
 
-### `Route` を Hilt で provides する
+### `route` を Hilt で provides する
 
-`SavedStateHandle.toRoute()` は `android.os.Bundle` に依存するためテストで扱いづらいという問題がありました。そこで `SavedStateHandle.toRoute()` を ViewModel の外に移し、`route` を直接受け取るようにします。
+`SavedStateHandle.toRoute()` が `android.os.Bundle` に依存するためテストで扱いにくいという問題を解決する方法として、`SavedStateHandle.toRoute()` の呼び出しを ViewModel の外に移し、`route` を ViewModel に直接注入する方法が挙げられます。
 
-具体的には、`SavedStateHandle.toRoute()` を行う Module を定義します。これにより、ViewModel は `Route` を直接 Inject できます。そのため、ViewModel が `android.os.Bundle` へ依存しないので、Unit Test を気にせず書くことができます。
+具体的には、`SavedStateHandle.toRoute()` を実行する Hilt Module を定義します。これにより、ViewModel は `Route` を直接インジェクトできるため、ViewModel が `android.os.Bundle` に依存せず、ユニットテストをより簡単に記述できるようになります。
 
-しかし、Module を定義することをめんどくさいと感じる人もいるでしょう。
+ただし、このために新しい Module を定義する手間を煩わしいと感じる開発者もいるかもしれません。
 
-```Kotlin
+```kotlin
 @Module
 @InstallIn(ViewModelComponent::class)
 object SampleRouteModule {
@@ -181,10 +181,8 @@ class SampleViewModel @Inject constructor(
 
 ## さいごに
 
-ここで紹介した方法が全てではないと思います。また、ベストはありません。プロジェクトや開発者によって選ぶべき手段がかわると思います。
+ここで紹介した方法が全てではありませんし、特定のベストプラクティ」が存在するわけでもありません。プロジェクトの要件や開発チームの慣習によって、最適な方法は異なります。
 
-この記事が参考になれば幸いです。
+また、Navigation 3 がリリースされると、このあたりの実装が大きく変わると思います。この記事の賞味期限は短そうです。
 
----
-
-Navigation 3 の登場で、大きく変わると思いますが。
+この記事が、Navigation Compose での引数受け取り方法を検討するときの参考になれば幸いです。
