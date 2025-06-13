@@ -65,6 +65,8 @@ fun NavGraphBuilder.sample() {
 
 最も単純な方法として、Composable から ViewModel のメソッドを呼び出す方法があります。以下の例では `LifecycleEventEffect` を利用し、`ON_CREATE` イベントのタイミングで ViewModel に `route` を渡しています。しかし、この方法では `ViewModel` の初期化後に `route` を取得することになるため、`route` が初期化に必須な場合には適していません。また、`route` を受け取るまでの ViewModel の状態も考慮する必要があります。
 
+一方で、Composable 側で初期化のタイミングやライフサイクルを制御したい場合には適している方法です。
+
 ```kotlin
 @Composable
 fun SampleScreen(
@@ -95,6 +97,8 @@ class SampleViewModel @Inject constructor() : ViewModel() {
 Dagger の Assisted Injection を利用することで、ViewModel のコンストラクタで一部の依存関係を Dagger による依存解決に任せつつ、別の引数を手動で受け取ることが可能です。これにより、ViewModel の初期化時に `route` を取得することができます。
 
 Assisted Injection を利用するには、Factory インターフェースを定義し、それを ViewModel と Composable の両方で扱う必要があります。普段から Assisted Injection を利用している開発者にとっては慣れた手法ですが、そうでない場合はその設定に手間や難しさを感じるかもしれません。
+
+この方法は、`SavedStateHandle` も介さずテストも用意です。また、どこで何が渡されているかが明確なため、ある意味では最も簡単ともいえます。
 
 ```kotlin
 @HiltViewModel(assistedFactory = SampleViewModel.Factory::class)
@@ -127,7 +131,9 @@ fun SampleScreen(
 
 Composable を介さずに ViewModel 側で直接引数を受け取ることも可能です。`SavedStateHandle.toRoute()` を使用することで、`route` を取得できます。
 
-`SavedStateHandle.toRoute()` は内部で `android.os.Bundle` を利用しているため、ユニットテストでは注意が必要です。ユニットテストでは Robolectric が必要になります。また、`savedStateHandle["arg"] = "dummy"` のように引数を指定する必要があるため、人によっては違和感を持つかもしれません。
+`SavedStateHandle.toRoute()` は内部で `android.os.Bundle` を利用しているため、ユニットテストでは注意が必要です。`android.os.Bundle` は Android フレームワークのクラスであり、JVM 単体ではテストできません。JVM 上でシミュレートするために Robolectric が必要になります。また、`savedStateHandle["arg"] = "dummy"` のように引数を指定する必要があるため、人によっては違和感を持つかもしれません。
+
+この方法は、今回紹介する方法の中で最もコード量が少ないです。実装時の作業コストを懸念する方には適しています。
 
 ```kotlin
 @HiltViewModel
@@ -160,7 +166,7 @@ class SampleViewModelTest {
 
 具体的には、`SavedStateHandle.toRoute()` を実行する Hilt Module を定義します。これにより、ViewModel は `Route` を直接インジェクトできるため、ViewModel が `android.os.Bundle` に依存せず、ユニットテストをより簡単に記述できるようになります。
 
-ただし、このために新しい Module を定義する手間を煩わしいと感じる開発者もいるかもしれません。
+このために Module を定義する手間を煩わしいと感じる開発者もいると思います。一方で、Hilt の扱いに慣れた開発者にとっては一番単純な方法とも言えます。
 
 ```kotlin
 @Module
@@ -183,6 +189,6 @@ class SampleViewModel @Inject constructor(
 
 ここで紹介した方法が全てではありませんし、特定のベストプラクティ」が存在するわけでもありません。プロジェクトの要件や開発チームの慣習によって、最適な方法は異なります。
 
-また、Navigation 3 がリリースされると、このあたりの実装が大きく変わると思います。この記事の賞味期限は短そうです。
+また、今後リリースが予定されている Navigation 3 では画面遷移が大きく変更されます。Navigation 3 は Composable を主軸に置いています。この記事で言えば、序盤に紹介した方法がスタンダードになるかもしれません。
 
 この記事が、Navigation Compose での引数受け取り方法を検討するときの参考になれば幸いです。
