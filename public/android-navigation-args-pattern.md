@@ -14,8 +14,6 @@ slide: false
 ignorePublish: false
 ---
 
-# Navigation Compose での引数の受け取り方を比較
-
 ## はじめに
 
 Navigation Compose 2.8.0 以降では、シリアル化可能なクラスを利用することで、型安全に引数を画面間で受け渡すことが可能になりました。
