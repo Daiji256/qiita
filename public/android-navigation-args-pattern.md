@@ -42,9 +42,11 @@ fun NavController.navigateToSample(arg: String) =
     navigate(route = SampleRoute(arg = arg))
 ```
 
-## `NavBackStackEntry` からの受け取り
+## `NavBackStackEntry` から受け取る
 
 直接的に引数を受け取る方法として、`NavBackStackEntry` を利用する方法があります。`NavGraphBuilder.composable()` の `content` ラムダで受け取る `NavBackStackEntry` から、画面遷移時に渡された `route` を抽出することで引数を受け取ります。
+
+引数を ViewModel で利用するには、Composable から ViewModel に渡す必要があります。
 
 ```kotlin
 fun NavGraphBuilder.sample() {
@@ -55,9 +57,7 @@ fun NavGraphBuilder.sample() {
 }
 ```
 
-### `route` を ViewModel に渡す方法
-
-#### Composable から ViewModel の関数を呼び出すことで渡す
+### ViewModel の関数を呼び出すことで渡す
 
 最も単純な方法として、Composable から ViewModel の関数を呼び出す方法があります。以下の例では `LifecycleEventEffect` を利用し、`ON_CREATE` イベントのタイミングで ViewModel に `route` を渡しています。しかし、この方法では `ViewModel` の初期化後に `route` を取得することになるため、`route` が初期化に必須な場合には適していません。また、`route` を受け取るまでの ViewModel の状態も考慮する必要があります。
 
@@ -88,7 +88,7 @@ class SampleViewModel @Inject constructor() : ViewModel() {
 }
 ```
 
-#### ViewModel のインスタンス作成時に渡す (Assisted Injection)
+### ViewModel のインスタンス作成時に渡す (Assisted Injection)
 
 Dagger の Assisted Injection を利用することで、ViewModel のコンストラクタで一部の依存関係を Dagger による依存解決に任せつつ、別の引数を手動で受け取ることが可能です。これにより、ViewModel の初期化時に `route` を取得することができます。
 
@@ -123,7 +123,15 @@ fun SampleScreen(
 }
 ```
 
-### ViewModel で `SavedStateHandle` から受け取る
+### `SavedStateHandle` から受け取る
+
+`SavedStateHandle` から `route` を抽出することで引数を受け取ることもできます。この場合、
+
+```kotlin
+val route = savedStateHandle.toRoute<SampleRoute>()
+```
+
+### ViewModel で直接 `route` を取得する
 
 Composable を介さずに ViewModel 側で直接引数を受け取ることも可能です。`SavedStateHandle.toRoute()` を使用することで、`route` を取得できます。
 
