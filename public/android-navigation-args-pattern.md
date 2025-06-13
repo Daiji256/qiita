@@ -197,6 +197,8 @@ https://github.com/Daiji256/android-showcase/tree/5eec36161350c0bd5f9a82718abbcb
 
 https://developer.android.com/guide/navigation/design/type-safety
 
+https://developer.android.com/guide/navigation/navigation-3
+
 https://dagger.dev/hilt/
 
 https://dagger.dev/dev-guide/assisted-injection.html
