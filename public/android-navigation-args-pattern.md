@@ -24,10 +24,6 @@ Navigation Compose 2.8.0 での画面遷移の詳細については、Android De
 
 https://developer.android.com/guide/navigation/design/type-safety
 
-ここで紹介するコードは、以下のリポジトリのコードを元に作成しています。
-
-https://github.com/Daiji256/android-showcase/tree/5eec36161350c0bd5f9a82718abbcb389b48e25a/feature/navigationarguments/src/main/kotlin/io/github/daiji256/showcase/feature/navigationarguments
-
 ## 画面遷移に引数を渡す方法
 
 引数を渡すには、`class` もしくは `data class` で定義されたシリアル化可能な `Route` クラスを利用します。`route` を `NavController.navigate()` メソッドに渡すことで、画面遷移を実行します。
@@ -194,3 +190,13 @@ class SampleViewModel @Inject constructor(
 また、今後リリースが予定されている Navigation 3 では画面遷移が大きく変更されます。Navigation 3 は Composable を主軸に置いています。本記事で紹介した中では、特に序盤の方法が今後の標準的なアプローチになる可能性があります。
 
 この記事が、Navigation Compose での引数受け取り方法を検討するときの参考になれば幸いです。
+
+## 参考文献
+
+https://github.com/Daiji256/android-showcase/tree/5eec36161350c0bd5f9a82718abbcb389b48e25a/feature/navigationarguments/src/main/kotlin/io/github/daiji256/showcase/feature/navigationarguments
+
+https://developer.android.com/guide/navigation/design/type-safety
+
+https://dagger.dev/hilt/
+
+https://dagger.dev/dev-guide/assisted-injection.html
