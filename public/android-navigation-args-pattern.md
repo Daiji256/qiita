@@ -146,12 +146,12 @@ class SampleViewModel @Inject constructor(
 ```
 
 ```kotlin
-@RunWith(RobolectricTestRunner::class) // Robolectric が必要
+@RunWith(RobolectricTestRunner::class)
 class SampleViewModelTest {
     @Test
     fun test_dummy_arg() {
         val savedStateHandle = SavedStateHandle()
-        savedStateHandle["arg"] = "dummy" // Route のキーに合わせて引数を指定
+        savedStateHandle["arg"] = "dummy"
         val viewModel = SampleViewModel(
             savedStateHandle = savedStateHandle,
         )
