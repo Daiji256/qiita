@@ -16,22 +16,21 @@ ignorePublish: true
 
 ## `UriHandler` とは
 
-`UriHandler` は `androidx.compose.ui.platform` が提供する、アプリ内から URI（ウェブページ、他アプリの画面、ファイルなど）を開くためのインターフェースです。Compose の中で次のようにシンプルに呼び出せます：
+`UriHandler` は `androidx.compose.ui.platform` が提供する、Compose 上から URI（Web ページ、ファイル、外部アプリなど）を開くためのインターフェースです。Compose 内では例えばこんなふうにシンプルに呼び出せます：
 
 ```kotlin
-val uriHandler = LocalUriHandler.current
-Button(
-    onClick = { uriHandler.openUri("https://example.com") },
-) {
-    Text(text = "open uri")
+@Composable
+fun OpenUriButton(uri: String) {
+    val uriHandler = LocalUriHandler.current
+    Button(onClick = { uriHandler.openUri(uri) }) {
+        Text(text = "Open URI")
+    }
 }
 ```
 
-`LocalUriHandler.current` から取得できるのが、プラットフォームごとに実装された `UriHandler` です。
+## デフォルトの `UriHandler`：`AndroidUriHandler`
 
-## デフォルトの `AndroidUriHandler`
-
-Android 環境では、デフォルトでは `AndroidUriHandler` が使われています：
+`LocalUriHandler.current` で取得できるのは、プラットフォームごとに実装された `UriHandler` です。Android 環境ではデフォルトで `AndroidUriHandler` が使われます：
 
 ```kotlin
 class AndroidUriHandler(private val context: Context) : UriHandler {
@@ -45,15 +44,18 @@ class AndroidUriHandler(private val context: Context) : UriHandler {
 }
 ```
 
-ブラウザ等の URI を開くことができるアプリが無いときや、URI が無効なときに `IllegalArgumentException` が throw されるます。そのため、呼び出しのさいは失敗を考慮する必要があります。
+実装から分かる通り、
+
+- URI に対応アプリがインストールされていないとき
+- 無効な URI の形式のとき
+
+などでは `IllegalArgumentException` が throw されます。そのため、呼び出し側ではクラッシュを防ぐために例外処理を用意する必要があります。
 
 ## 簡単に安全に URI を開くために
 
-`UriHandler` を利用する主要な目的として、記事やお知らせなどからホームページ等のウェブサイトなどを開くことがあげられます。これらの場合、起動に失敗した場合ユーザーにそのことを通知すれば十分なこととが多いです。
+記事中のリンクやお知らせなど、ユーザーに URI を開かせたいシーンは多いものの、毎回例外処理を呼び出し側で実装するのは手間です。加えて、ライブラリや SDK 内で `UriHandler` を呼び出している場合は、例外処理を差し込むのが難しいです。
 
-しかし、呼び出しのたびに例外の対応をするのは大変です。また、ライブラリや SDK に隠れていて、例外時の処理が難しいこともあります。
-
-そこで、例外を throw する代わりに Toast を表示する `UriHandler` を実装します。`UriHandler` は interface のため、次のように独自実装できます：
+そこで、例外の代わりにトーストを表示する独自の `UriHandler`（`SafeUriHandler`）を実装します：
 
 ```kotlin
 class SafeUriHandler(private val context: Context) : UriHandler {
@@ -67,21 +69,27 @@ class SafeUriHandler(private val context: Context) : UriHandler {
 }
 ```
 
-`SafeUriHandler` を `CompositionLocalProvider` で `LocalUriHandler` に provides することで、それ以下で例外の throw を気にせず `UriHandler` を使うことができます：
+`CompositionLocalProvider` で `LocalUriHandler` 上書きすることで、以降は `LocalUriHandler.current` 経由で `SafeUriHandler` を取得できます：
 
 ```kotlin
-val context = LocalContext.current
-val uriHandler = remember(context) { SafeUriHandler(context) }
-CompositionLocalProvider(
-    LocalUriHandler provides uriHandler,
-) { /* ... */ }
+@Composable
+fun MyApp() {
+    val context = LocalContext.current
+    val uriHandler = remember(context) { SafeUriHandler(context) }
+    CompositionLocalProvider(
+        LocalUriHandler provides uriHandler,
+    ) {
+        // ...
+    }
+}
 ```
 
 ## まとめ
 
-- `LocalUriHandler.current` で `UriHandler` を取得できる
-- 例外を throw する代わりに Toast を 表示する `UriHandler` を実装した
-- `LocalUriHandler` を上書きすることで、アプリ全体で気軽に安全に利用できる
+- `LocalUriHandler.current` でプラットフォーム標準の `UriHandler` を取得できる
+- デフォルトの `AndroidUriHandler` は起動失敗時に例外を throw する
+- `SafeUriHandler` のように例外を throw しないことで、呼び出し側での例外処理を不要にできる
+- `CompositionLocalProvider` で `LocalUriHandler` を上書きすることでアプリ全体で独自の URI オープン処理を一括適用できる
 
 ## 参考文献
 
