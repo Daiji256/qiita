@@ -5,8 +5,9 @@ tags:
   - Kotlin
   - Intent
   - JetpackCompose
+  - Compose
 private: false
-updated_at: '2025-06-15T08:49:21+09:00'
+updated_at: "2025-06-15T08:49:21+09:00"
 id: bca5a43afe85fec698d2
 organization_url_name: null
 slide: false
