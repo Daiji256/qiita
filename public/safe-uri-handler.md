@@ -13,8 +13,6 @@ slide: false
 ignorePublish: true
 ---
 
-# 簡単で安全な UriHandler の実装例と利用方法
-
 ## `UriHandler` とは
 
 `UriHandler` は `androidx.compose.ui.platform` が提供する、Compose 上から URI（Web ページ、ファイル、外部アプリなど）を開くためのインターフェースです。Composable 関数からは、以下のようにシンプルに呼び出せます。
