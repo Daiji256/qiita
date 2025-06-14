@@ -7,7 +7,7 @@ tags:
   - JetpackCompose
   - Hilt
 private: false
-updated_at: "2025-06-14T09:40:18+09:00"
+updated_at: '2025-06-15T08:55:46+09:00'
 id: a5bbb5408fc1ffa69694
 organization_url_name: null
 slide: false
