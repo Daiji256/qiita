@@ -98,14 +98,14 @@ class SampleViewModel @Inject constructor() : ViewModel() {
 
 ### 2. Assisted Injection を使って `ViewModel` 初期化時に渡す
 
-`ViewModel` の初期化タイミングで引数を渡したい場合は、Dagger の Assisted Injection（部分的な依存性注入を可能にする仕組み）が有効です。
+`ViewModel` の初期化タイミングで引数を渡したい場合は、Dagger の Assisted Injection（部分的な DI を可能にする仕組み）が有効です。
 
-Assisted Injection を利用することで、一部の依存関係を Dagger による依存解決に任せつつ、別の引数を直接渡すことができます。これにより `ViewModel` の初期化時に `route` が利用できます。
+Assisted Injection を利用することで、一部の依存関係を Dagger により解決しつつ、別の引数を直接渡すことができます。これにより `ViewModel` の初期化時に `route` が利用できます。
 
 #### ✅ メリット
 
 - 引数を `ViewModel` 初期化に利用できる
-- テスト時に依存を注入できる
+- テスト時に DI できる
 
 #### ⚠️ デメリット
 
@@ -225,12 +225,12 @@ class SampleViewModel @Inject constructor(
 
 以下は `ViewModel` での引数受け取りにおける 4 手法の比較表です。
 
-| 方法               | 初期化タイミング | テストのしやすさ          | 実装の複雑さ          |
-| ------------------ | ---------------- | ------------------------- | --------------------- |
-| 関数呼び出し       | 遅延初期化       | ✅ 初期化を制御できる     | 🟡 関数呼び出しが必要 |
-| Assisted Injection | 即時初期化       | ✅ 依存性注入でテスト容易 | 🟡 Factory が必要     |
-| `SavedStateHandle` | 即時初期化       | ⚠️ Bundle に依存          | 🟢 最小の実装量       |
-| Hilt で provides   | 即時初期化       | ✅ 依存性注入でテスト容易 | 🟡 Module が必要      |
+| 方法               | 初期化タイミング | テストのしやすさ      | 実装の複雑さ          |
+| ------------------ | ---------------- | --------------------- | --------------------- |
+| 関数呼び出し       | 遅延初期化       | ✅ 初期化を制御できる | 🟡 関数呼び出しが必要 |
+| Assisted Injection | 即時初期化       | ✅ DI でテスト容易    | 🟡 Factory が必要     |
+| `SavedStateHandle` | 即時初期化       | ⚠️ Bundle に依存      | 🟢 最小の実装量       |
+| Hilt で provides   | 即時初期化       | ✅ DI でテスト容易    | 🟡 Module が必要      |
 
 ## おわりに
 
