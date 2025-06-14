@@ -53,7 +53,9 @@ class AndroidUriHandler(private val context: Context) : UriHandler {
 
 そのために、毎回呼び出し側で例外処理を実装するのは手間です。また、ライブラリや SDK 内で `UriHandler` を呼び出している場合は、例外処理を差し込むのが難しいケースもあります。
 
-そこで、例外を throw する代わりにトーストを表示する独自の `UriHandler`（`SafeUriHandler`）を実装してみました。`CompositionLocalProvider` を使用して `LocalUriHandler` を上書きすることで、以降の処理では `LocalUriHandler.current` 経由で `SafeUriHandler` を取得できます。これにより、アプリケーション全体で安全な URI オープン処理を適用することが可能です。
+そこで、例外を throw する代わりにトーストを表示する独自の `UriHandler`（`SafeUriHandler`）を実装してみました[^toast]。`CompositionLocalProvider` を使用して `LocalUriHandler` を上書きすることで、以降の処理では `LocalUriHandler.current` 経由で `SafeUriHandler` を取得できます。これにより、アプリケーション全体で安全な URI オープン処理を適用することが可能です。
+
+[^toast]: `SafeUriHandler` は簡易な通知手段として Toast を利用していますが、UI の状態に応じて Snackbar や Dialog を用いる方が適切な場合もあります。
 
 ```kotlin
 class SafeUriHandler(private val context: Context) : UriHandler {
