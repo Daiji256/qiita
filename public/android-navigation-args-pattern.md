@@ -46,7 +46,7 @@ fun NavController.navigateToSample(arg: String) =
 
 ### 1. Composable から ViewModel に渡す（関数呼び出し）
 
-`NavGraphBuilder.composable()` の `content` ラムダで受け取る `NavBackStackEntry` から、`toRoute()` により `route` を取得します。そして ViewModel の関数を呼びだすことで `route` を ViewModel に渡します。
+`NavGraphBuilder.composable()` の `content` ラムダで受け取る `NavBackStackEntry` から、`toRoute()` により `route` を取得します。そして ViewModel の関数を呼び出すことで `route` を ViewModel に渡します。
 
 以下の例では `LifecycleEventEffect` を利用し、`ON_CREATE` イベントのタイミングで ViewModel に `route` を渡しています。
 
@@ -57,7 +57,7 @@ fun NavController.navigateToSample(arg: String) =
 
 #### ⚠️ デメリット
 
-- `ViewModel` の初期化時にはまだ引数が使えない
+- ViewModel の初期化時にはまだ引数が使えない
 - ライフサイクルが複雑な場合は制御が難しい
 
 #### 実装例
@@ -98,7 +98,7 @@ class SampleViewModel @Inject constructor() : ViewModel() {
 
 ### 2. Assisted Injection を使って ViewModel 初期化時に渡す
 
-ViewModel の初期化タイミングで引数を渡したい場合は、Dagger の Assisted Injection（Dagger による部分的な依存性注入を可能にする仕組み）が有効です。
+ViewModel の初期化タイミングで引数を渡したい場合は、Dagger の Assisted Injection（部分的な依存性注入を可能にする仕組み）が有効です。
 
 Assisted Injection を利用することで、一部の依存関係を Dagger による依存解決に任せつつ、別の引数を直接渡すことができます。これにより ViewModel の初期化時に `route` が利用できます。
 
@@ -145,7 +145,7 @@ fun SampleScreen(
 
 `SavedStateHandle.toRoute()` により `route` を取得できます。これにより、Composable を介さずに ViewModel 側で直接引数を受け取ることができます。
 
-`toRoute()` は内部で `android.os.Bundle` を利用しているため、ユニットテストでは注意が必要です。`android.os.Bundle` は Android フレームワークのクラスであり、JVM 単体ではテストできません。JVM 上でシミュレートするために Robolectric が必要になります。また、`savedStateHandle["arg"] = "value"` のように引数を指定する必要があります。
+`toRoute()` は内部で `android.os.Bundle` を利用しているため、ユニットテストでは注意が必要です。`android.os.Bundle` は Android フレームワークのクラスであり、JVM 単体ではテストできません。シミュレートするには Robolectric が必要になります。また、`savedStateHandle["arg"] = "value"` のように引数を指定する必要があります。
 
 #### ✅ メリット
 
@@ -229,7 +229,7 @@ class SampleViewModel @Inject constructor(
 | ------------------ | ---------------- | ------------------------- | --------------------- |
 | 関数呼び出し       | 遅延初期化       | ✅ 初期化を制御できる     | 🟡 関数呼び出しが必要 |
 | Assisted Injection | 即時初期化       | ✅ 依存性注入でテスト容易 | 🟡 Factory が必要     |
-| SavedStateHandle   | 即時初期化       | ⚠️ Bundle に依存          | 🟢 最小の実装量       |
+| `SavedStateHandle` | 即時初期化       | ⚠️ Bundle に依存          | 🟢 最小の実装量       |
 | Hilt で provides   | 即時初期化       | ✅ 依存性注入でテスト容易 | 🟡 Module が必要      |
 
 ## おわりに
