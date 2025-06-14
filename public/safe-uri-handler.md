@@ -15,7 +15,7 @@ ignorePublish: true
 
 ## `UriHandler` とは
 
-`UriHandler` は `androidx.compose.ui.platform` が提供する、Compose 上から URI（Web ページ、ファイル、外部アプリなど）を開くためのインターフェースです。Composable 関数からは、以下のようにシンプルに呼び出せます。
+`UriHandler` は `androidx.compose.ui.platform` が提供する、URI（Web ページ、ファイル、外部アプリなど）を開くためのインターフェースです。Composable 関数からは、以下のようにシンプルに呼び出せます。
 
 ```kotlin
 @Composable
