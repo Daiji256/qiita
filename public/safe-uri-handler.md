@@ -17,7 +17,7 @@ ignorePublish: true
 
 ## `UriHandler` とは
 
-`UriHandler` は `androidx.compose.ui.platform` が提供する、Compose 上から URI（Web ページ、ファイル、外部アプリなど）を開くためのインターフェースです。Composable 関数からは以下のようにシンプルに呼び出すことができます。
+`UriHandler` は `androidx.compose.ui.platform` が提供する、Compose 上から URI（Web ページ、ファイル、外部アプリなど）を開くためのインターフェースです。Composable 関数からは、以下のようにシンプルに呼び出せます。
 
 ```kotlin
 @Composable
@@ -29,11 +29,11 @@ fun OpenUriButton(uri: String) {
 }
 ```
 
-## Android でのデフォルトの `UriHandler`
+## Android におけるデフォルトの `UriHandler`
 
-`LocalUriHandler.current` で取得できるのは、プラットフォームごとに実装された `UriHandler` です。Android 環境では、デフォルトで `AndroidUriHandler` が使用されます。
+`LocalUriHandler.current` で取得されるのは、各プラットフォームに応じた `UriHandler` の実装です。Android 環境では、デフォルトとして `AndroidUriHandler` が使用されます。
 
-実装から分かる通り、URI に対応するアプリがインストールされていない場合や無効な URI の場合などでは `IllegalArgumentException` が throw されます。そのため、呼び出し側では、クラッシュ（アプリの異常終了）を防ぐために、例外処理を行う必要があります。
+この実装では、URI に対応するアプリがインストールされていない場合や、URI の形式が無効な場合などに `IllegalArgumentException` がスローされます。そのため、呼び出し側ではクラッシュ（アプリの異常終了）を防ぐため、例外処理を行う必要があります。
 
 ```kotlin
 class AndroidUriHandler(private val context: Context) : UriHandler {
