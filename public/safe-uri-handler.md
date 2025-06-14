@@ -98,7 +98,7 @@ class AndroidUriHandler(private val context: Context) : UriHandler {
 
 記事中のリンクやお知らせなど、ユーザーに URI を開かせたいシーンは多々あります。ほとんどの場合では URI を開くのに失敗したときは、ユーザーにそのことを伝えれば十分です。
 
-そのために、毎回呼び出し側で例外処理を実装するのは煩雑です。また、ライブラリや SDK 内で `UriHandler` を呼び出している場合は、例外処理を差し込むのが難しいケースもあります。
+しかし、毎回呼び出し側で例外処理を実装するのは煩雑です。また、ライブラリや SDK 内で `UriHandler` を呼び出している場合は、例外処理を差し込むのが難しいケースもあります。
 
 そこで、例外を throw する代わりにトーストを表示する独自の `UriHandler`（`SafeUriHandler`）を実装してみました[^toast]。`CompositionLocalProvider` を使用して `LocalUriHandler` を上書きすることで、以降の処理では `LocalUriHandler.current` を通じて `SafeUriHandler` を取得できます。これにより、アプリケーション全体で安全な URI オープン処理を適用することが可能です。
 
