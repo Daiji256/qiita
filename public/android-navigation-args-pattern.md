@@ -98,11 +98,11 @@ class SampleViewModel @Inject constructor() : ViewModel() {
 }
 ```
 
-### 2. Assisted Injection を使って ViewModel 生成時に渡す
+### 2. Assisted Injection を使って ViewModel 初期化時に渡す
 
 ViewModel の初期化タイミングで引数を渡したい場合は、Dagger の Assisted Injection（Dagger による部分的な依存性注入を可能にする仕組み）が有効です。
 
-Assisted Injection を利用することで、一部の依存関係を Dagger による依存解決に任せつつ、別の引数を直接渡すことができます。ViewModel の生成時に `route` を渡すことで、初期化時に `route` が利用できます。
+Assisted Injection を利用することで、一部の依存関係を Dagger による依存解決に任せつつ、別の引数を直接渡すことができます。これにより ViewModel の初期化時に `route` が利用できます。
 
 #### ✅ メリット
 
@@ -145,9 +145,9 @@ fun SampleScreen(
 
 ### 3. ViewModel で `SavedStateHandle` から受け取る
 
-`SavedStateHandle` から `route` を抽出できます。これにより、Composable を介さずに ViewModel 側で直接引数を受け取ることができます。
+`SavedStateHandle.toRoute()` により `route` を取得できます。これにより、Composable を介さずに ViewModel 側で直接引数を受け取ることができます。
 
-`SavedStateHandle.toRoute()` は内部で `android.os.Bundle` を利用しているため、ユニットテストでは注意が必要です。`android.os.Bundle` は Android フレームワークのクラスであり、JVM 単体ではテストできません。JVM 上でシミュレートするために Robolectric が必要になります。また、`savedStateHandle["arg"] = "value"` のように引数を指定する必要があります。
+`toRoute()` は内部で `android.os.Bundle` を利用しているため、ユニットテストでは注意が必要です。`android.os.Bundle` は Android フレームワークのクラスであり、JVM 単体ではテストできません。JVM 上でシミュレートするために Robolectric が必要になります。また、`savedStateHandle["arg"] = "value"` のように引数を指定する必要があります。
 
 #### ✅ メリット
 
@@ -232,13 +232,13 @@ class SampleViewModel @Inject constructor(
 | 関数呼び出し       | 遅延初期化       | ✅ 初期化を制御可能       | 🟡 関数呼び出しが必要 |
 | Assisted Injection | 即時初期化       | ✅ 依存性注入でテスト容易 | 🟡 Factory が必要     |
 | SavedStateHandle   | 即時初期化       | ⚠️ Bundle に依存          | 🟢 最小の実装量       |
-| Hiltで provides    | 即時初期化       | ✅ 依存性注入でテスト容易 | 🟡 Module が必要      |
+| Hilt で provides   | 即時初期化       | ✅ 依存性注入でテスト容易 | 🟡 Module が必要      |
 
 ## おわりに
 
-本記事で紹介した方法は一例であり、特定のベストプラクティスがあるわけではありません。プロジェクトや開発チームに合わせて選択すべきです。
+本記事で紹介した方法は一例であり、特定のベストプラクティスがあるわけではありません。プロジェクトや開発チームに合わせて選択すべきです。今後の変更にも備え、柔軟な選択が求められます。
 
-今後リリースが予定されている Navigation 3 では画面遷移が大きく変更されます。Navigation 3 は Composable を主軸に置いています。本記事で紹介した中では、特に序盤の方法が今後の標準的なアプローチになる可能性があります。
+本記事の方法は現行の Navigation 2.8.0 に基づいていますが、Navigation 3 のリリースが予定されています。Navigation 3 は Composable を主軸に置いており、画面遷移についてが大きな変更があります。本記事で紹介した中では、特に序盤の方法が今後の標準的なアプローチになる可能性が高いと予想しています。
 
 ## 参考文献
 
