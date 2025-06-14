@@ -18,7 +18,7 @@ ignorePublish: false
 
 Navigation Compose 2.8.0 以降では、シリアル化可能なクラスを用いて、型安全に画面間でデータを渡せるようになりました。
 
-本記事では、「画面遷移時の引数を ViewModel でどの受け取るか」に焦点を当て、4 つの方法を紹介し比較します。すべて Hilt + Navigation Compose 2.8.0 以降の環境を想定していますが、他の DI フレームワークやバージョンでも応用可能です。
+本記事では、「画面遷移時の引数を `ViewModel` でどの受け取るか」に焦点を当て、4 つの方法を紹介し比較します。すべて Hilt + Navigation Compose 2.8.0 以降の環境を想定していますが、他の DI フレームワークやバージョンでも応用可能です。
 
 ## 引数の渡し方
 
@@ -42,13 +42,13 @@ fun NavController.navigateToSample(arg: String) =
 
 ## 引数の受け取り方
 
-遷移先では、`NavBackStackEntry` などを通じて `route` を取得します。その受け取り方と ViewModel での扱い方を紹介します。
+遷移先では、`NavBackStackEntry` などを通じて `route` を取得します。その受け取り方と `ViewModel` での扱い方を紹介します。
 
-### 1. Composable から ViewModel に渡す（関数呼び出し）
+### 1. Composable から `ViewModel` に渡す（関数呼び出し）
 
-`NavGraphBuilder.composable()` の `content` ラムダで受け取る `NavBackStackEntry` から、`toRoute()` により `route` を取得します。そして ViewModel の関数を呼び出すことで `route` を ViewModel に渡します。
+`NavGraphBuilder.composable()` の `content` ラムダで受け取る `NavBackStackEntry` から、`toRoute()` により `route` を取得します。そして `ViewModel` の関数を呼び出すことで `route` を `ViewModel` に渡します。
 
-以下の例では `LifecycleEventEffect` を利用し、`ON_CREATE` イベントのタイミングで ViewModel に `route` を渡しています。
+以下の例では `LifecycleEventEffect` を利用し、`ON_CREATE` イベントのタイミングで `ViewModel` に `route` を渡しています。
 
 #### ✅ メリット
 
@@ -57,7 +57,7 @@ fun NavController.navigateToSample(arg: String) =
 
 #### ⚠️ デメリット
 
-- ViewModel の初期化時にはまだ引数が使えない
+- `ViewModel` の初期化時にはまだ引数が使えない
 - ライフサイクルが複雑な場合は制御が難しい
 
 #### 実装例
@@ -96,15 +96,15 @@ class SampleViewModel @Inject constructor() : ViewModel() {
 }
 ```
 
-### 2. Assisted Injection を使って ViewModel 初期化時に渡す
+### 2. Assisted Injection を使って `ViewModel` 初期化時に渡す
 
-ViewModel の初期化タイミングで引数を渡したい場合は、Dagger の Assisted Injection（部分的な依存性注入を可能にする仕組み）が有効です。
+`ViewModel` の初期化タイミングで引数を渡したい場合は、Dagger の Assisted Injection（部分的な依存性注入を可能にする仕組み）が有効です。
 
-Assisted Injection を利用することで、一部の依存関係を Dagger による依存解決に任せつつ、別の引数を直接渡すことができます。これにより ViewModel の初期化時に `route` が利用できます。
+Assisted Injection を利用することで、一部の依存関係を Dagger による依存解決に任せつつ、別の引数を直接渡すことができます。これにより `ViewModel` の初期化時に `route` が利用できます。
 
 #### ✅ メリット
 
-- 引数を ViewModel 初期化に利用できる
+- 引数を `ViewModel` 初期化に利用できる
 - テスト時に依存を注入できる
 
 #### ⚠️ デメリット
@@ -141,7 +141,7 @@ fun SampleScreen(
 }
 ```
 
-### 3. ViewModel で `SavedStateHandle` から受け取る
+### 3. `ViewModel` で `SavedStateHandle` から受け取る
 
 `SavedStateHandle.toRoute()` により `route` を取得できます。これにより、Composable を介さずに ViewModel 側で直接引数を受け取ることができます。
 
@@ -149,7 +149,7 @@ fun SampleScreen(
 
 #### ✅ メリット
 
-- ViewModel の初期化と同時に取得できる
+- `ViewModel` の初期化と同時に取得できる
 - 実装がシンプルでコード量が少ない
 
 #### ⚠️ デメリット
@@ -186,13 +186,13 @@ class SampleViewModelTest {
 
 ### 4. `SavedStateHandle.toRoute()` を外で呼び、Hilt で注入
 
-テストしやすさを重視する場合、`SavedStateHandle.toRoute()` を切り出して、ViewModel には `route` を直接注入する必要があります。
+テストしやすさを重視する場合、`SavedStateHandle.toRoute()` を切り出して、`ViewModel` には `route` を直接注入する必要があります。
 
-具体的には、`SavedStateHandle.toRoute()` を実行する Hilt Module を定義します。これにより、ViewModel は `route` を直接インジェクトできるため、ViewModel が `android.os.Bundle` に依存せず、ユニットテストをより簡単に記述できます。
+具体的には、`SavedStateHandle.toRoute()` を実行する Hilt Module を定義します。これにより、`ViewModel` は `route` を直接インジェクトできるため、`ViewModel` が `android.os.Bundle` に依存せず、ユニットテストをより簡単に記述できます。
 
 #### ✅ メリット
 
-- ViewModel が Android フレームワークに依存しないため、ユニットテストが容易
+- `ViewModel` が Android フレームワークに依存しないため、ユニットテストが容易
 - DI による構成がシンプルで、再利用性が高い
 
 #### ⚠️ デメリット
@@ -223,7 +223,7 @@ class SampleViewModel @Inject constructor(
 
 ## まとめ
 
-以下は ViewModel での引数受け取りにおける 4 手法の比較表です。
+以下は `ViewModel` での引数受け取りにおける 4 手法の比較表です。
 
 | 方法               | 初期化タイミング | テストのしやすさ          | 実装の複雑さ          |
 | ------------------ | ---------------- | ------------------------- | --------------------- |
