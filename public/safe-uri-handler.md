@@ -31,7 +31,7 @@ fun OpenUriButton(uri: String) {
 
 `LocalUriHandler.current` で取得されるのは、各プラットフォームに応じた `UriHandler` の実装です。Android 環境では、デフォルトとして `AndroidUriHandler` が使用されます。
 
-`AndroidUriHandler` では、URI に対応するアプリがインストールされていない場合や、URI の形式が無効な場合などに `IllegalArgumentException` がスローされます。そのため、呼び出し側ではクラッシュ（アプリの異常終了）を防ぐため、例外処理を行う必要があります。
+`AndroidUriHandler` では、URI に対応するアプリがインストールされていない場合や、URI の形式が無効な場合などに `IllegalArgumentException` が throw されます。そのため、呼び出し側ではクラッシュ（アプリの異常終了）を防ぐため、例外処理を行う必要があります。
 
 <details><summary>AndroidUriHandler.android.kt 全文</summary>
 
