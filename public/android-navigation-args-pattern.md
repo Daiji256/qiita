@@ -60,6 +60,8 @@ fun NavController.navigateToSample(arg: String) =
 - `ViewModel` の初期化時にはまだ引数が使えない
 - ライフサイクルが複雑な場合は制御が難しい
 
+#### 実装例
+
 ```kotlin
 fun NavGraphBuilder.sample() {
     composable<SampleRoute> { entry ->
@@ -110,6 +112,8 @@ Assisted Injection を利用することで、一部の依存関係を Dagger �
 - `Factory` インターフェースや DI 設定が少し煩雑
 - Assisted Injection の理解が必要
 
+#### 実装例
+
 ```kotlin
 @HiltViewModel(assistedFactory = SampleViewModel.Factory::class)
 class SampleViewModel @AssistedInject constructor(
@@ -153,6 +157,8 @@ fun SampleScreen(
 - `android.os.Bundle` に依存しておりユニットテストでは Robolectric が必要
 - テストでは `savedStateHandle["arg"] = "value"` のように準備する必要がある
 
+#### 実装例
+
 ```kotlin
 @HiltViewModel
 class SampleViewModel @Inject constructor(
@@ -193,6 +199,8 @@ class SampleViewModelTest {
 
 - Hilt Module の記述が必要
 - Hilt に慣れていないとやや冗長に感じる
+
+#### 実装例
 
 ```kotlin
 @Module
