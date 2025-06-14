@@ -3,11 +3,11 @@ title: 簡単で安全な UriHandler の実装例と利用方法
 tags:
   - Android
   - Kotlin
-  - JetpackCompose
   - Intent
+  - JetpackCompose
 private: false
-updated_at: ""
-id: null
+updated_at: '2025-06-15T08:49:21+09:00'
+id: bca5a43afe85fec698d2
 organization_url_name: null
 slide: false
 ignorePublish: false
