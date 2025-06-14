@@ -138,7 +138,7 @@ fun MyApp() {
 - `LocalUriHandler.current` を使用すると、プラットフォーム標準の `UriHandler` を取得できます
 - デフォルトの `AndroidUriHandler` は、URI の起動に失敗した際に例外を throw し、アプリがクラッシュする可能性があります
 - `SafeUriHandler` のように例外を throw しない独自の `UriHandler` を実装することで、呼び出し側での例外処理が不要になります
-- `CompositionLocalProvider` を使って `LocalUriHandler` を上書きすることで、アプリ全体で独自処理を一括して適用できます
+- `CompositionLocalProvider` を使って `LocalUriHandler` を上書きすることで、アプリ全体を通して独自処理利用できます
 
 ## 参考文献
 
