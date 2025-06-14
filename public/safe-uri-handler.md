@@ -33,7 +33,7 @@ fun OpenUriButton(uri: String) {
 
 `LocalUriHandler.current` で取得できるのは、プラットフォームごとに実装された `UriHandler` です。Android 環境では、デフォルトで `AndroidUriHandler` が使用されます。
 
-実装から分かる通り、URI に対応するアプリがインストールされていない場合や無効な URI の場合などでは `IllegalArgumentException` が throw されます。そのため、呼び出し側ではクラッシュ（アプリの強制終了）を防ぐために例外処理を行う必要があります。
+実装から分かる通り、URI に対応するアプリがインストールされていない場合や無効な URI の場合などでは `IllegalArgumentException` が throw されます。そのため、呼び出し側ではクラッシュ（アプリの異常終了）を防ぐために例外処理を行う必要があります。
 
 ```kotlin
 class AndroidUriHandler(private val context: Context) : UriHandler {
@@ -51,9 +51,9 @@ class AndroidUriHandler(private val context: Context) : UriHandler {
 
 記事中のリンクやお知らせなど、ユーザーに URI を開かせたいシーンは多々あります。ほとんどの場合では URI を開くのに失敗したときは、ユーザーにそのことを伝えれば十分です。
 
-そのために、毎回呼び出し側で例外処理を実装するのは手間がかかります。また、ライブラリや SDK 内で `UriHandler` を呼び出している場合は、例外処理を差し込むのが難しいケースもあります。
+そのために、毎回呼び出し側で例外処理を実装するのは手間です。また、ライブラリや SDK 内で `UriHandler` を呼び出している場合は、例外処理を差し込むのが難しいケースもあります。
 
-そこで、例外を throw する代わりにトーストを表示する独自の `UriHandler`（`SafeUriHandler`）を実装してみました。`CompositionLocalProvider` を使用して `LocalUriHandler` を上書きすることで、以降は `LocalUriHandler.current` 経由で `SafeUriHandler` を取得できます。これにより、アプリケーション全体で安全な URI オープン処理を適用することが可能です。
+そこで、例外を throw する代わりにトーストを表示する独自の `UriHandler`（`SafeUriHandler`）を実装してみました。`CompositionLocalProvider` を使用して `LocalUriHandler` を上書きすることで、以降の処理では `LocalUriHandler.current` 経由で `SafeUriHandler` を取得できます。これにより、アプリケーション全体で安全な URI オープン処理を適用することが可能です。
 
 ```kotlin
 class SafeUriHandler(private val context: Context) : UriHandler {
