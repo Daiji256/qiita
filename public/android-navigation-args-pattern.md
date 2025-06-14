@@ -14,6 +14,8 @@ slide: false
 ignorePublish: false
 ---
 
+# Navigation Compose における ViewModel での引数の受け取り方 4 選と比較
+
 ## はじめに
 
 Navigation Compose 2.8.0 以降では、シリアル化可能なクラスを用いて、型安全に画面間でデータを受け渡すことが可能になりました。従来の文字列ベースの `route` 指定とは異なり、引数の受け渡しに関する記述がより宣言的で安全になっています。
@@ -145,7 +147,7 @@ fun SampleScreen(
 
 `SavedStateHandle` から `route` を抽出できます。これにより、Composable を介さずに ViewModel 側で直接引数を受け取ることができます。
 
-`SavedStateHandle.toRoute()` は内部で `android.os.Bundle` を利用しているため、ユニットテストでは注意が必要です。`android.os.Bundle` は Android フレームワークのクラスであり、JVM 単体ではテストできません。JVM 上でシミュレートするために Robolectric が必要になります。また、`savedStateHandle["arg"] = "value"` のように引数を指定する必要がります。
+`SavedStateHandle.toRoute()` は内部で `android.os.Bundle` を利用しているため、ユニットテストでは注意が必要です。`android.os.Bundle` は Android フレームワークのクラスであり、JVM 単体ではテストできません。JVM 上でシミュレートするために Robolectric が必要になります。また、`savedStateHandle["arg"] = "value"` のように引数を指定する必要があります。
 
 #### ✅ メリット
 
