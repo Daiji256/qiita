@@ -14,8 +14,6 @@ slide: false
 ignorePublish: false
 ---
 
-# Navigation Compose における ViewModel での引数の受け取り方 4 選と比較
-
 ## はじめに
 
 Navigation Compose 2.8.0 以降では、シリアル化可能なクラスを用いて、型安全に画面間でデータを渡せるようになりました。
