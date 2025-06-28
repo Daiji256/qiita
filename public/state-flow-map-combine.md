@@ -15,46 +15,64 @@ ignorePublish: true
 
 # mapState, combineState: StateFlow を同期処理で変換・合成する
 
-Kotlin Coroutines の `StateFlow` は、UI 状態管理などでよく使われます。しかし、例えば以下のような状況で少し苦労します。
+## はじめに
 
-- `StateFlow<User>` から `StateFlow<UserId>` のように、特定のプロパティだけを取り出したい
-- 複数の `StateFlow` を合成して、1 つの `StateFlow<UiState>` にまとめたい
+Kotlin の `StateFlow` は状態管理などのシーンで利用されています。しかし、以下のような場面で開発者は課題に直面することがあります：
 
-これを実現しようとすると、通常は `CoroutineScope` などを使った冗長な処理が必要です。この記事では、`StateFlow` から新しい `StateFlow` を**同期的に**変換・合成する関数 `mapState` と `combineState` を紹介します。
+- `StateFlow<User>` から `StateFlow<String>`（ユーザー名のみ）への変換
+- 複数の `StateFlow` を組み合わせて単一の `StateFlow<UiState>` を作成
+- `CoroutineScope` を必要としない軽量な状態変換
 
-## `Flow` と `StateFlow` の違い
+本記事では、これらの課題を解決する `mapState` と `combineState` という 2 つの関数を紹介し、実際の使用例を通じてその有効性を示します。
 
-なぜこうした問題や解決策が必要かを理解するために、まず `Flow` と `StateFlow` の違いを確認します。これにより、従来の変換アプローチの問題点が明確になります。
+## 問題の背景：既存アプローチの制約
 
-- `Flow` は Cold Stream であり、`collect` されるまで処理が始まらない
-- `StateFlow` は Hot Stream で、常に 1 つの `value` を保持しており、`CoroutineScope` なしに即座に値を取得できる
+### `Flow` と `StateFlow` の特性
 
-## 一般的な変換方法とその課題
+まず、なぜこの問題が発生するのかを理解するために、`Flow` と `StateFlow` の違いを確認しましょう：
 
-`map` や `combine` と `stateIn` を使うことで、`StateFlow` の変換は可能ですが、いくつか問題があります。
+| 特性           | Flow               | StateFlow                |
+| -------------- | ------------------ | ------------------------ |
+| ストリーム型   | Cold Stream        | Hot Stream               |
+| 実行タイミング | `collect` 時に開始 | 常に実行                 |
+| 現在値の取得   | 不可               | `value` で即座に取得可能 |
+| 用途           | 非同期データ処理   | 状態管理                 |
 
-- `map` や `combine` は `Flow` を返すだけで、即座に `value` を取得できない
-- `stateIn` で `StateFlow` に変換する場合、必ず `CoroutineScope` が必要となる
+### 従来の変換手法の問題点
 
-こうした処理は以下のように記述されます。
+標準的なアプローチでは `map`/`combine` と `stateIn` を組み合わせますが、以下の制約があります：
 
 ```kotlin
-val bar: StateFlow<Bar> = foo
-    .map { it.toBar() }
+val userNameState: StateFlow<String> = userState
+    .map { it.name } // Flow<String> になる
     .stateIn(
-        scope = coroutineScope,
+        scope = viewModelScope, // CoroutineScope が必要
         started = SharingStarted.Lazily,
-        initialValue = initialBar,
+        initialValue = userState.name // 初期値の重複定義
     )
 ```
 
-## 同期処理で変換・合成する関数
+そのため、これらの問題点があります：
 
-以下のような関数を実装することで、`CoroutineScope` を使わず同期的に変換・合成できます。`StateFlow` を直接実装することで、`CoroutineScope` を使わずに `StateFlow` を作成できます。
+- `CoroutineScope` に依存する
+- 初期値の重複定義など、冗長な実装になる
+- 変換処理がコルーチンで実行される
+- メモリ使用量の増加（変換後の値をメモリで保持）
 
-`value` や `collect` で値を参照するときに `transform` により変換を実行します。これにより常に最新の変換後の値を同期的に得ることができます。また、`distinctUntilChanged()` により、`StateFlow` の連続して同じ値を流さないことを満たすことができます。
+## 解決策：同期変換関数の実装
 
-ただし、この実装では `value` を参照するたびに `transform` が呼ばれます。そのため、**transform は軽量で副作用のない関数にすべき**です。重い処理が必要な場合は、従来の `map` や `combine` と `stateIn` を用いたアプローチを選択してください。
+### 設計思想
+
+提案する解決策は以下の原則に基づいています：
+
+- `value` で最新の変換結果を即座に取得
+- `CoroutineScope` や追加リソース不要
+- `StateFlow` の仕様（重複値の非配信）を維持
+- 値アクセス時の偏見により、メモリ使用量を維持
+
+### 実装詳細
+
+以下が実装コードです：
 
 ```kotlin
 inline fun <T, R> StateFlow<T>.mapState(
@@ -106,16 +124,90 @@ inline fun <reified T, R> combineState(
 }
 ```
 
+## 実用例：ViewModel での活用
+
+### 単一状態の変換
+
+```kotlin
+class UserProfileViewModel : ViewModel() {
+    private val user = MutableStateFlow(User(name = "太郎", age = 25))
+
+    // 従来の方法
+    val userNameLegacy = user.map { it.name }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = user.name,
+        )
+
+    // 新しい方法
+    val userName = user.mapState { it.name }
+}
+```
+
+### 複数状態の合成
+
+```kotlin
+class UserEditorViewModel : ViewModel() {
+    private val name = MutableStateFlow("")
+    private val age = MutableStateFlow(0)
+
+    // 従来の方法
+    val userLegacy = combine(name, age, ::User)
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = User(name = name.value, age = age.value),
+        )
+
+    // 新しい方法
+    val user = combineState(name, age, ::User)
+}
+```
+
+## パフォーマンス考慮事項
+
+### パフォーマンス比較
+
+従来手法の `map`/`combine` + `stateIn` と提案手法の `mapState`/`combineState` には処理の違いによりパフォーマンス等に差があります：
+
+| アプローチ                  | メモリ使用量 | CPU 使用量       | `CoroutineScope` |
+| --------------------------- | ------------ | ---------------- | ---------------- |
+| `map`/`combine` + `stateIn` | 高           | 低（キャッシュ） | 依存             |
+| `mapState`/`combineState`   | 低           | 中（都度計算）   | なし             |
+
+### 使用上の注意点
+
+`mapState`/`combineState` の利用が適して例：
+
+- 軽量な計算処理（プロパティ参照、基本的な演算など）
+- 低頻度のアクセス
+
+`map`/`combine` + `stateIn` の利用が適して例：
+
+- 重い計算処理（リストのソート、IO 処理など）
+- 副作用を伴う処理（データベース更新）
+- 頻繁な `value` へのアクセス
+
 ## まとめ
 
-今回紹介した `mapState` と `combineState` により以下が実現できます。ただし、変換処理のコストや副作用には注意してください。
+`mapState`/`combineState` は以下のメリットを提供します：
 
-- シンプルで直感的な記述での変換・合成
-- `CoroutineScope` 不要
-- `value` プロパティで即座に最新の状態を取得可能
+- `CoroutineScope` 不要でコードが簡潔
+- 即座の値アクセス（`value` プロパティ）
+- 既存の `StateFlow` との互換性を維持
+- メモリ効率的な実装
+
+しかし、いくつかの注意点があります：
+
+- 変換処理は軽量である必要
+- 副作用はのない変換処理である必要
+- 頻繁なアクセスに注意
 
 ## 参考文献
 
 https://kotlinlang.org/docs/flow.html
 
 https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/-state-flow/
+
+https://github.com/Daiji256/android-showcase/tree/e84f98bcec79c8c5aecae63cc4a97c7411d48d2c/core/common/src/main/kotlin/io/github/daiji256/showcase/core/common/stateflow
