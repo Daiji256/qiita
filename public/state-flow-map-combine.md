@@ -16,18 +16,16 @@ ignorePublish: true
 
 # mapState, combineState: StateFlow を同期処理で変換・合成する
 
-## はじめに
-
-Android アプリ開発において、`StateFlow` は UI 状態管理において必要不可欠です。しかし、実際の開発では以下のシーンで課題に直面します：
+Android アプリ開発において、`StateFlow` は UI 状態管理に不可欠です。しかし、実際の開発では以下の課題に直面することがあります：
 
 - `StateFlow` から別の `StateFlow` への変換
-- 複数の `StateFlow` を組み合わせた `StateFlow` を作成
+- 複数の `StateFlow` を組み合わせた `StateFlow` の作成
 
-本記事では、これらの課題を解決する `mapState` と `combineState` を提案し、実際の Android アプリ開発での活用例を紹介します。
+本記事では、これらの課題を解決する **`mapState`** と **`combineState`** を提案し、実際の Android アプリ開発での活用例を紹介します。
 
-## 標準的なアプローチの問題
+## 標準的なアプローチの問題点
 
-`StateFlow` を別の `StateFlow` に変換する標準的なアプローチ（従来手法）は `map`/`combine` と `stateIn` を組み合わせます：
+`StateFlow` を別の `StateFlow` に変換する標準的なアプローチ（従来手法）では、`map`/`combine` と `stateIn` を組み合わせて使用します：
 
 ```kotlin
 class UserViewModel : ViewModel() {
@@ -43,12 +41,12 @@ class UserViewModel : ViewModel() {
 }
 ```
 
-この従来のアプローチには以下の問題があります：
+この従来のアプローチにはいくつかの問題があります：
 
-- `CoroutineScope` への依存
-- 変換後の値をメモリに保持するため、メモリ使用量が増加
-- コルーチンによる非同期処理のオーバーヘッド
-- `started` の選択や初期値の重複定義などの多くの実装
+- **`CoroutineScope` への依存**：コルーチンを起動する必要がある
+- **メモリ使用量の増加**：変換後の値をメモリに保持するため、メモリ使用量が増える
+- **コルーチンによるオーバーヘッド**：非同期処理に伴うオーバーヘッドが発生する
+- **多い実装量**：`started` の選択や初期値の定義など実装量が多い
 
 ## 同期変換関数の実装
 
@@ -58,11 +56,11 @@ class UserViewModel : ViewModel() {
 
 - **軽量性**：`CoroutineScope` や追加リソースが不要
 - **効率性**：必要時のみ計算を実行し、メモリにキャッシュしない
-- **互換性**：`StateFlow` との完全な互換性
+- **互換性**：`StateFlow` との完全な互換性がある
 
 ### 実装詳細
 
-`mapState` と `combineState` は `StateFlow` を直接実装し、値を参照時に `transform` を実行するように実装されます：
+`mapState` と `combineState` は `StateFlow` を直接実装し、値を参照する際に `transform` を実行するようにされます：
 
 ```kotlin
 inline fun <T, R> StateFlow<T>.mapState(
@@ -118,7 +116,7 @@ inline fun <reified T, R> combineState(
 
 ### `mapState` による変換例
 
-従来手法の `map` を `mapState` に差し替え、`stateIn` を削除することで提案手法に乗り換えることができます：
+従来手法の `map` を `mapState` に、`stateIn` を削除することで、提案手法に移行できます：
 
 ```kotlin
 class UserProfileViewModel : ViewModel() {
@@ -141,7 +139,7 @@ class UserProfileViewModel : ViewModel() {
 
 ### `combineState` による合成例
 
-`mapState` と同様に、従来手法の `combine` を `combineState` に差し替え、`stateIn` を削除することで提案手法に乗り換えることができます：
+`mapState` と同様に、従来手法の `combine` を `combineState` に、`stateIn` を削除することで、提案手法に移行できます：
 
 ```kotlin
 class UserEditViewModel : ViewModel() {
@@ -166,39 +164,31 @@ class UserEditViewModel : ViewModel() {
 
 ## パフォーマンス分析と使い分けガイド
 
-### 処理性能比較
+### 処理性能
 
-`map`/`combine` + `stateIn`（従来手法）と `mapState`/`combineState`（提案手法）を処理性能を比較するとのこのようになります：
+`map`/`combine` + `stateIn`（従来手法）と `mapState`/`combineState`（提案手法）の処理性能をまとめると、次の通りです：
 
 | 項目             | `map`/`combine` + `stateIn`      | `mapState`/`combineState`  |
-| ---------------- | -------------------------------- | -------------------------- |
-| CPU 使用量       | **低（キャッシュ済み値を返却）** | 中（参照時に計算）         |
+| :--------------- | :------------------------------- | :------------------------- |
+| CPU 使用量       | **低（キャッシュ済み値を返却）** | 高（参照時に計算）         |
 | メモリ使用量     | 高（変換結果をキャッシュ）       | **低（遅延評価）**         |
 | 初期化コスト     | 高（コルーチン起動）             | **低（オブジェクト作成）** |
 | `CoroutineScope` | 依存する                         | **依存しない**             |
 
 ### 適切な使い分け
 
-**`mapState`/`combineState` が適している場面：**
+提案手法は参照するたびに変換処理を実行します。そのため変換処理は、純粋関数（副作用がなし）で軽量である必要があります。また、高頻度の `value` へのアクセスは避けるべきです。
 
-- プロパティアクセスや基本的な演算（文字列結合、四則演算など）
-- `value` へのアクセス頻度が低い場合
+提案手法の `mapState`/`combineState` はこのような場合に有用です：
 
 ```kotlin
-// 適している例
 val displayName = user.mapState { "${it.firstName} ${it.lastName}" }
-val isAdult = user.mapState { it.age >= 18 }
-val formattedPrice = price.mapState { "¥${it:,}" }
+val isActive = combineState(now, endAt) { now < endAt }
 ```
 
-**従来手法が適している場面：**
-
-- 重い計算処理（リストのソート、IO 処理など）
-- 副作用を伴う処理（ログ出力、分析イベント送信など）
-- `value` への頻繁なアクセス
+一方で、思い処理や副作用を伴う場合には、従来手法の `map`/`combine` + `stateIn` が適しています：
 
 ```kotlin
-// 従来手法
 val sortedUsers = users
     .map { it.sortedBy { it.name } } // 重い処理
     .stateIn(
@@ -210,27 +200,26 @@ val sortedUsers = users
 
 ### 注意すべき実装上のポイント
 
-**変換関数の制約：**
+**変換関数の制約:**
 
-- **純粋関数**である必要があります（副作用なし）
-- **軽量な処理**に留める
+- **純粋関数**である必要があります（副作用なし）。
+- **軽量な処理**に留めるべきです。
 
 ## まとめ
 
-`mapState` と `combineState` は、Android 開発における `StateFlow` の活用を大幅に簡素化します。
+`mapState` と `combineState` は `StateFlow` の変換・合成に関する処理を簡素化します。
 
-**主なメリット:**
+**主なメリット：**
 
 - `CoroutineScope` 不要によるコードの簡潔性とテスタビリティの向上
 - 遅延評価によるメモリ効率の最適化
 - 既存の `StateFlow` との完全な互換性
-- Android開発でよくある軽量な変換処理に最適
+- Android 開発でよくある軽量な変換処理に最適
 
-**導入時の考慮点:**
+**導入時の考慮点：**
 
-- 変換処理は軽量かつ純粋関数に限定
-- 頻繁な `value` アクセスがある場合は従来の `stateIn` を検討
-- 重い処理や副作用がある場合は適用しない
+- 変換処理は軽量かつ純粋関数に限定する
+- 重い処理や副作用、頻繁な参照がある場合は従来手法を利用する
 
 ## 参考文献
 
