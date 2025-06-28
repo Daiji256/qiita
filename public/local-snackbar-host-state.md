@@ -11,7 +11,7 @@ updated_at: ""
 id: null
 organization_url_name: null
 slide: false
-ignorePublish: true
+ignorePublish: false
 ---
 
 モバイルアプリにおいてユーザーへの情報伝達は非常に重要です。その中でも、短時間でユーザーにフィードバックを伝える際に便利な UI 要素として Snackbar があります。
