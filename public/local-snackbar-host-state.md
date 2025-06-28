@@ -36,8 +36,6 @@ Snackbar は表示する要因になった画面やアプリ内で表示され�
 | **スコープ** | **画面・アプリ**（特定機能に対して） | **デバイス全体**（システムに対して） |
 | 表示例       | [Snackbar のスクショ]                | [Toast のスクショ]                   |
 
----
-
 ## Compose における Snackbar
 
 Compose で Snackbar を表示するには、`SnackbarHost` と `SnackbarHostState` を使用します。
