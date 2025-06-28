@@ -14,8 +14,6 @@ slide: false
 ignorePublish: true
 ---
 
-# LocalSnackbarHostState: CompositionLocal による SnackbarHostState の管理方法
-
 モバイルアプリにおいてユーザーへの情報伝達は非常に重要です。その中でも、短時間でユーザーにフィードバックを伝える際に便利な UI 要素として Snackbar があります。
 
 この記事では、Compose における Snackbar の基本から、画面などのスコープを意識した Snackbar の状態・表示を `CompositionLocal` によりうまく扱う方法を紹介します。
