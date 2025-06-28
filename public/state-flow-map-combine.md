@@ -1,6 +1,7 @@
 ---
 title: "mapState, combineState: StateFlow を同期処理で変換・合成する"
 tags:
+  - Android
   - Kotlin
   - Flow
   - StateFlow
@@ -17,62 +18,51 @@ ignorePublish: true
 
 ## はじめに
 
-Kotlin の `StateFlow` は状態管理などのシーンで利用されています。しかし、以下のような場面で開発者は課題に直面することがあります：
+Android アプリ開発において、`StateFlow` は UI 状態管理において必要不可欠です。しかし、実際の開発では以下のシーンで課題に直面します：
 
-- `StateFlow<User>` から `StateFlow<String>`（ユーザー名のみ）への変換
-- 複数の `StateFlow` を組み合わせて単一の `StateFlow<UiState>` を作成
-- `CoroutineScope` を必要としない軽量な状態変換
+- `StateFlow` から別の `StateFlow` への変換
+- 複数の `StateFlow` を組み合わせた `StateFlow` を作成
 
-本記事では、これらの課題を解決する `mapState` と `combineState` という 2 つの関数を紹介し、実際の使用例を通じてその有効性を示します。
+本記事では、これらの課題を解決する `mapState` と `combineState` を提案し、実際の Android アプリ開発での活用例を紹介します。
 
-## 問題の背景：既存アプローチの制約
+## 標準的なアプローチの問題
 
-### `Flow` と `StateFlow` の特性
-
-まず、なぜこの問題が発生するのかを理解するために、`Flow` と `StateFlow` の違いを確認しましょう：
-
-| 特性           | Flow               | StateFlow                |
-| -------------- | ------------------ | ------------------------ |
-| ストリーム型   | Cold Stream        | Hot Stream               |
-| 実行タイミング | `collect` 時に開始 | 常に実行                 |
-| 現在値の取得   | 不可               | `value` で即座に取得可能 |
-| 用途           | 非同期データ処理   | 状態管理                 |
-
-### 従来の変換手法の問題点
-
-標準的なアプローチでは `map`/`combine` と `stateIn` を組み合わせますが、以下の制約があります：
+`StateFlow` を別の `StateFlow` に変換する標準的なアプローチ（従来手法）は `map`/`combine` と `stateIn` を組み合わせます：
 
 ```kotlin
-val userNameState: StateFlow<String> = userState
-    .map { it.name } // Flow<String> になる
-    .stateIn(
-        scope = viewModelScope, // CoroutineScope が必要
-        started = SharingStarted.Lazily,
-        initialValue = userState.name // 初期値の重複定義
-    )
+class UserViewModel : ViewModel() {
+    private val user = MutableStateFlow(User(name = "太郎", age = 25))
+
+    val userName: StateFlow<String> = user
+        .map { it.name } // Flow<String> になる
+        .stateIn(
+            scope = viewModelScope, // CoroutineScope が必要
+            started = SharingStarted.WhileSubscribed(5000), // 用途ごとに選択
+            initialValue = user.value.name, // 初期値の重複定義
+        )
+}
 ```
 
-そのため、これらの問題点があります：
+この従来のアプローチには以下の問題があります：
 
-- `CoroutineScope` に依存する
-- 初期値の重複定義など、冗長な実装になる
-- 変換処理がコルーチンで実行される
-- メモリ使用量の増加（変換後の値をメモリで保持）
+- `CoroutineScope` への依存
+- 変換後の値をメモリに保持するため、メモリ使用量が増加
+- コルーチンによる非同期処理のオーバーヘッド
+- `started` の選択や初期値の重複定義などの多くの実装
 
-## 解決策：同期変換関数の実装
+## 同期変換関数の実装
 
-### 設計思想
+### 設計思想と要件
 
-提案する解決策は以下の原則に基づいています：
+提案する解決策は以下の要件を満たします：
 
-- `value` で最新の変換結果を即座に取得
-- `CoroutineScope` や追加リソース不要
-- `StateFlow` の仕様（重複値の非配信）を維持
-- 値アクセス時の偏見により、メモリ使用量を維持
+- **軽量性**：`CoroutineScope` や追加リソースが不要
+- **効率性**：必要時のみ計算を実行し、メモリにキャッシュしない
+- **互換性**：`StateFlow` との完全な互換性
 
 ### 実装詳細
 
-以下が実装コードです：
+`mapState` と `combineState` は `StateFlow` を直接実装し、値を参照時に `transform` を実行するように実装されます：
 
 ```kotlin
 inline fun <T, R> StateFlow<T>.mapState(
@@ -124,85 +114,123 @@ inline fun <reified T, R> combineState(
 }
 ```
 
-## 実用例：ViewModel での活用
+## Android アプリ開発での実用例
 
-### 単一状態の変換
+### `mapState` による変換例
+
+従来手法の `map` を `mapState` に差し替え、`stateIn` を削除することで提案手法に乗り換えることができます：
 
 ```kotlin
 class UserProfileViewModel : ViewModel() {
     private val user = MutableStateFlow(User(name = "太郎", age = 25))
 
-    // 従来の方法
-    val userNameLegacy = user.map { it.name }
+    // 従来手法
+    val userNameLegacy = user
+        .map { it.name }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = user.name,
+            initialValue = user.value.name,
         )
 
-    // 新しい方法
-    val userName = user.mapState { it.name }
+    // 提案手法
+    val userName = user
+        .mapState { it.name }
 }
 ```
 
-### 複数状態の合成
+### `combineState` による合成例
+
+`mapState` と同様に、従来手法の `combine` を `combineState` に差し替え、`stateIn` を削除することで提案手法に乗り換えることができます：
 
 ```kotlin
-class UserEditorViewModel : ViewModel() {
+class UserEditViewModel : ViewModel() {
     private val name = MutableStateFlow("")
     private val age = MutableStateFlow(0)
 
-    // 従来の方法
-    val userLegacy = combine(name, age, ::User)
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = User(name = name.value, age = age.value),
-        )
+    // 従来手法
+    val userLegacy = combine(name, age) { name, age ->
+        User(name = name, age = age)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = User(name = name.value, age = age.value),
+    )
 
-    // 新しい方法
-    val user = combineState(name, age, ::User)
+    // 提案手法
+    val user = combineState(name, age) { name, age ->
+        User(name = name, age = age)
+    }
 }
 ```
 
-## パフォーマンス考慮事項
+## パフォーマンス分析と使い分けガイド
 
-### パフォーマンス比較
+### 処理性能比較
 
-従来手法の `map`/`combine` + `stateIn` と提案手法の `mapState`/`combineState` には処理の違いによりパフォーマンス等に差があります：
+`map`/`combine` + `stateIn`（従来手法）と `mapState`/`combineState`（提案手法）を処理性能を比較するとのこのようになります：
 
-| アプローチ                  | メモリ使用量 | CPU 使用量       | `CoroutineScope` |
-| --------------------------- | ------------ | ---------------- | ---------------- |
-| `map`/`combine` + `stateIn` | 高           | 低（キャッシュ） | 依存             |
-| `mapState`/`combineState`   | 低           | 中（都度計算）   | なし             |
+| 項目             | `map`/`combine` + `stateIn`      | `mapState`/`combineState`  |
+| ---------------- | -------------------------------- | -------------------------- |
+| CPU 使用量       | **低（キャッシュ済み値を返却）** | 中（参照時に計算）         |
+| メモリ使用量     | 高（変換結果をキャッシュ）       | **低（遅延評価）**         |
+| 初期化コスト     | 高（コルーチン起動）             | **低（オブジェクト作成）** |
+| `CoroutineScope` | 依存する                         | **依存しない**             |
 
-### 使用上の注意点
+### 適切な使い分け
 
-`mapState`/`combineState` の利用が適して例：
+**`mapState`/`combineState` が適している場面：**
 
-- 軽量な計算処理（プロパティ参照、基本的な演算など）
-- 低頻度のアクセス
+- プロパティアクセスや基本的な演算（文字列結合、四則演算など）
+- `value` へのアクセス頻度が低い場合
 
-`map`/`combine` + `stateIn` の利用が適して例：
+```kotlin
+// 適している例
+val displayName = user.mapState { "${it.firstName} ${it.lastName}" }
+val isAdult = user.mapState { it.age >= 18 }
+val formattedPrice = price.mapState { "¥${it:,}" }
+```
+
+**従来手法が適している場面：**
 
 - 重い計算処理（リストのソート、IO 処理など）
-- 副作用を伴う処理（データベース更新）
-- 頻繁な `value` へのアクセス
+- 副作用を伴う処理（ログ出力、分析イベント送信など）
+- `value` への頻繁なアクセス
+
+```kotlin
+// 従来手法
+val sortedUsers = users
+    .map { it.sortedBy { it.name } } // 重い処理
+    .stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = null,
+    )
+```
+
+### 注意すべき実装上のポイント
+
+**変換関数の制約：**
+
+- **純粋関数**である必要があります（副作用なし）
+- **軽量な処理**に留める
 
 ## まとめ
 
-`mapState`/`combineState` は以下のメリットを提供します：
+`mapState` と `combineState` は、Android 開発における `StateFlow` の活用を大幅に簡素化します。
 
-- `CoroutineScope` 不要でコードが簡潔
-- 即座の値アクセス（`value` プロパティ）
-- 既存の `StateFlow` との互換性を維持
-- メモリ効率的な実装
+**主なメリット:**
 
-しかし、いくつかの注意点があります：
+- `CoroutineScope` 不要によるコードの簡潔性とテスタビリティの向上
+- 遅延評価によるメモリ効率の最適化
+- 既存の `StateFlow` との完全な互換性
+- Android開発でよくある軽量な変換処理に最適
 
-- 変換処理は軽量である必要
-- 副作用はのない変換処理である必要
-- 頻繁なアクセスに注意
+**導入時の考慮点:**
+
+- 変換処理は軽量かつ純粋関数に限定
+- 頻繁な `value` アクセスがある場合は従来の `stateIn` を検討
+- 重い処理や副作用がある場合は適用しない
 
 ## 参考文献
 
