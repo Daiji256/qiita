@@ -1,5 +1,5 @@
 ---
-title: 'mapState / combineState: StateFlow を同期処理で変換・合成する'
+title: "mapState / combineState: StateFlow を同期処理で変換・合成する"
 tags:
   - Android
   - Kotlin
@@ -7,7 +7,7 @@ tags:
   - coroutine
   - Stateflow
 private: false
-updated_at: '2025-06-28T20:09:03+09:00'
+updated_at: "2025-06-28T20:09:03+09:00"
 id: eb1a32c4dcaa087769f3
 organization_url_name: null
 slide: false
@@ -46,7 +46,7 @@ class UserViewModel : ViewModel() {
 - **オーバーヘッド**：非同期処理に伴うコルーチン起動コストが発生する
 - **実装量が多い**：`started` の指定や初期値の定義などが必要
 
-## 同期変換関数の実装
+## 同期変換関数 `mapState` / `combineState` の実装
 
 今回提案する `mapState` / `combineState` は次の要件を満たします：
 
