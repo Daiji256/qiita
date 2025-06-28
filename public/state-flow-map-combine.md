@@ -56,7 +56,7 @@ class UserViewModel : ViewModel() {
 
 `mapState` / `combineState` は `StateFlow` を直接実装し、値を参照する際に `transform` を実行するように動作します[^suppress-optin]：
 
-[^suppress-optin]: `StateFlow` の実装は不安定・実験的なため、`@Suppress("UnnecessaryOptInAnnotation")` と `@OptIn(ExperimentalForInheritanceCoroutinesApi::class)` が必要です：[kotlinx.coroutines Issue #3770](https://github.com/Kotlin/kotlinx.coroutines/issues/3770)
+[^suppress-optin]: `StateFlow` の実装は不安定・実験的なため、`@Suppress("UnnecessaryOptInAnnotation")` と `@OptIn(ExperimentalForInheritanceCoroutinesApi::class)` が必要です。
 
 ```kotlin
 inline fun <T, R> StateFlow<T>.mapState(
