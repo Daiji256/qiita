@@ -34,7 +34,7 @@ class UserViewModel : ViewModel() {
         .stateIn(
             scope = viewModelScope, // CoroutineScope が必要
             started = SharingStarted.WhileSubscribed(5000), // 用途ごとに選択
-            initialValue = user.value.name, // 初期値の重複定義
+            initialValue = user.value.name, // 初期値を重複して定義
         )
 }
 ```
@@ -42,7 +42,7 @@ class UserViewModel : ViewModel() {
 この従来手法には次のような問題があります：
 
 - **`CoroutineScope` への依存**：コルーチンの起動が必要
-- **メモリ使用量の増加**：変換後の値をメモリに保持するためメモリ使用量が増える
+- **メモリ使用量の増加**：変換後の値をメモリに保持するため
 - **オーバーヘッド**：非同期処理に伴うコルーチン起動コストが発生する
 - **実装量が多い**：`started` の指定や初期値の定義などが必要
 
@@ -51,10 +51,10 @@ class UserViewModel : ViewModel() {
 今回提案する `mapState` / `combineState` は次の要件を満たします：
 
 - **軽量性**：`CoroutineScope` や追加リソースが不要
-- **効率性**：必要時のみ計算を実行し、メモリにキャッシュしない
+- **効率性**：必要なときに変換処理を実行し、メモリにキャッシュしない
 - **互換性**：`StateFlow` との完全な互換性
 
-`mapState` / `combineState` は `StateFlow` を直接実装し、値を参照する際に `transform` を実行するように実装されます[^suppress-optin]：
+`mapState` / `combineState` は `StateFlow` を直接実装し、値を参照する際に `transform` を実行するように動作します[^suppress-optin]：
 
 [^suppress-optin]: `StateFlow` の実装は不安定・実験的なため、`@Suppress("UnnecessaryOptInAnnotation")` と `@OptIn(ExperimentalForInheritanceCoroutinesApi::class)` が必要です：[kotlinx.coroutines Issue #3770](https://github.com/Kotlin/kotlinx.coroutines/issues/3770)
 
@@ -165,7 +165,7 @@ map / combine + stateIn（従来手法）と mapState / combineState（提案手
 | 項目             | `map` / `combine` + `stateIn` | `mapState` / `combineState` |
 | :--------------- | :---------------------------- | :-------------------------- |
 | CPU 使用量       | 低（キャッシュ済み値）        | 高（参照時に計算）          |
-| メモリ使用量     | 高（キャッシュ保持）          | 低（遅延評価）              |
+| メモリ使用量     | 高（キャッシュ保持）          | 低（都度計算）              |
 | 初期化コスト     | 高（コルーチン起動）          | 低（オブジェクト作成）      |
 | `CoroutineScope` | 必要                          | 不要                        |
 
@@ -184,7 +184,7 @@ map / combine + stateIn（従来手法）と mapState / combineState（提案手
 
 ## まとめ
 
-本記事では、`StateFlow` の変換・合成における従来手法の課題を整理し、それを解決する `mapState` / `combineState` を提案しました。提案手法は、実装量の削減、メモリ効率の向上、初期化コストの低減を実現しつつ、適切な条件下で高いパフォーマンスを発揮します。変換処理の特性やアクセス頻度に応じて使い分けることで、より柔軟で効率的な UI 状態管理が可能になります。
+本記事では、`StateFlow` の変換・合成における従来手法の課題を整理し、それを解決する `mapState` / `combineState` を提案しました。提案手法は、実装量の削減、メモリ効率の向上、初期化コストの低減を実現しつつ、適切な条件下で効率的に動作します。変換処理の特性やアクセス頻度に応じて使い分けることで、より柔軟で効率的な UI 状態管理が可能になります。
 
 ## 参考文献
 
