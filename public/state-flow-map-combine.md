@@ -14,8 +14,6 @@ slide: false
 ignorePublish: true
 ---
 
-# mapState / combineState: StateFlow を同期処理で変換・合成する
-
 Android アプリ開発において、`StateFlow` は UI 状態管理に不可欠です。しかし、実際の開発では以下の課題に直面することがあります：
 
 - `StateFlow` から別の `StateFlow` への変換
