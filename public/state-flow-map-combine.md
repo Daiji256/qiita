@@ -1,5 +1,5 @@
 ---
-title: "mapState, combineState: StateFlow を StateFlow へ変換したい"
+title: "mapState, combineState: StateFlow を同期処理で変換・合成する"
 tags:
   - Kotlin
   - Flow
@@ -13,13 +13,19 @@ slide: false
 ignorePublish: true
 ---
 
-# mapState, combineState: StateFlow を StateFlow へ変換したい
+# mapState, combineState: StateFlow を同期処理で変換・合成する
 
-`StateFlow<Foo>` を `StateFlow<Bar>` に変換したい、`StateFlow<Foo>` と `StateFlow<Bar>` を `StateFlow<Pair<Foo, Bar>>` に変換したい、そういうことがあります。この記事ではそれを解決する 1 つの手段を紹介します。
+Kotlin Coroutines の `StateFlow` は、UI の状態管理などで非常に役に立ちます。しかし、`StateFlow<User>` から `StateFlow<UserId>` のように `User` から `UserId` だけを取り出す変換をしたい、`StateFlow<FooState>` と `StateFlow<BarState>` などを合成して `StateFlow<UiState>` を作りたい、といった場面で `CoroutineScope` を使うなど冗長な処理が必要になります。
 
-## `Flow` と `StateFlow` の違いについて
+この記事では、`StateFlow` から新たな `StateFlow` を `CoroutineScope` を使わず、同期的に変換・合成するための拡張関数 `mapState` と `combineState` を実装し紹介します。
 
-cold と hot の違いについてかるーく説明する
+## `Flow` と `StateFlow` の違い
+
+これらの関数の必要性を理解するために、まず `Flow` と `StateFlow` の基本的な性質の違いをおさらいします。
+
+`Flow` は Cold Stream で subscribe することで処理が実行されます。つまり、subscribe するまで処理は実行されません。
+
+`StateFlow` は Hot Stream で `Flow` を継承しています。`StateFlow` は常に 1 つの `value` を保持します。`value` は `CoroutineScope` がなしで即時に参照可能です。
 
 ```kotlin
 public interface Flow<out T>
@@ -30,9 +36,15 @@ public interface StateFlow<out T> : SharedFlow<T>
 public interface SharedFlow<out T> : Flow<T>
 ```
 
-## `Flow` の `map` と `combine` について
+## 一般的な変換方法とその問題
 
-`Flow` の `map` や `combine` は cold な `Flow` を前提に用意されている。普通に使うと `StateFlow` を `Flow` に変換することになる。
+一般的に `StateFlow` を別の `StateFlow` に変換する場合、`map` や `combine` と `stateIn` を用います。これにはいくつかの問題があります。
+
+### `map` や `combine` は `Flow` を返す
+
+`Flow` には `map` や `combine` といった変換や合成を行うための関数が用意されています。しかし、これらは `Flow` を返すように設計されているため、`StateFlow` に対しても利用したとしても `Flow` になってしまいます。
+
+`StateFlow` が持つ `value` に `CoroutineScope` なしで即時に参照できるという特性が失われてしまいます。
 
 ```kotlin
 public inline fun <T, R> Flow<T>.map(
@@ -45,42 +57,36 @@ public inline fun <reified T, R> combine(
     vararg flows: Flow<T>,
     crossinline transform: suspend (Array<T>) -> R,
 ): Flow<R>
-
-public fun <T1, T2, R> combine(
-    flow: Flow<T1>,
-    flow2: Flow<T2>,
-    transform: suspend (T1, T2) -> R,
-): Flow<R>
 ```
 
-## `StateFlow` から `StateFlow` に変換したい
+### `stateIn` による `StateFlow` への再変換
 
-### `stateIn`
-
-`Flow` を `StateFlow` に変換するための `stateIn` がある。しかしこれには `CoroutineScope` を使って、`collect` することで `StateFlow` に変換している。非同期処理が不要であっても、そうなってしまう。
+`Flow` を `StateFlow` に変換するための `stateIn` があります。
 
 ```kotlin
 public fun <T> Flow<T>.stateIn(
     scope: CoroutineScope,
     started: SharingStarted,
-    initialValue: T
+    initialValue: T,
 ): StateFlow<T>
 ```
+
+`stateIn` により、`StateFlow` への変換は実現できますが、`Flow` を `collect` するために `CoroutineScope` を必要とします。つまり、変換が同期処理であったとしても、Coroutine を起動し変換することになります。
 
 ```kotlin
 val foo: StateFlow<Foo> = TODO()
 val bar: StateFlow<Bar> = foo
     .map { it.toBar() }
-    .stateInt(
+    .stateIn(
         scope = coroutineScope,
         started = SharingStarted.Lazily,
         initialValue = initialBar,
     )
 ```
 
-### 同期処理で実現したい
+## 同期処理で変換・合成する
 
-こういう関数があれば良い。
+そこで、以下のような同期処理により `StateFlow` のまま変換・合成する関数がほしいです。
 
 ```kotlin
 inline fun <T, R> StateFlow<T>.mapState(
@@ -93,15 +99,24 @@ inline fun <reified T, R> combineState(
     vararg flows: StateFlow<T>,
     crossinline transform: (Array<T>) -> R,
 ): StateFlow<R>
+```
 
-fun <T1, T2, R> combineState(
-    flow: StateFlow<T1>,
-    flow2: StateFlow<T2>,
-    transform: (T1, T2) -> R,
-): StateFlow<R>
+この関数があればシンプルに変換・合成処理を実装できます。
+
+```kotlin
+val foo: StateFlow<Foo> = TODO()
+val bar: StateFlow<Bar> = foo.mapState { it.toBar() }
 ```
 
 ### 実装
+
+この理想を実現する実装がこちらです。`StateFlow` インターフェースを直接実装することで、`CoroutineScope` を使わずに `StateFlow` を作成できます。
+
+`value` や `collect` で値を参照するときに `transform` により変換を実行します。これにより常に最新の変換後の値を同期的に得ることができます。また、`distinctUntilChanged()` により、`StateFlow` の同じ値が流れないという特性を満たすことができます。
+
+しかしこの実装は、`value` を参照するたびに `transform` が実行されます。`transform` を軽量な処理に保つ必要があり、副作用を持たせてはいけません。ほとんどのケースでは問題にならないはずです。
+
+もし `transform` が軽量ではない場合は、これまで通り `map` や `combine` と `stateIn` を使うの方が好ましいです。
 
 ```kotlin
 inline fun <T, R> StateFlow<T>.mapState(
@@ -130,6 +145,19 @@ inline fun <T, R> StateFlow<T>.mapState(
 ```
 
 ```kotlin
+fun <T1, T2, R> combineState(
+    flow: StateFlow<T1>,
+    flow2: StateFlow<T2>,
+    transform: (T1, T2) -> R,
+): StateFlow<R> =
+    combineState(flow, flow2) { args: Array<*> ->
+        @Suppress("UNCHECKED_CAST")
+        transform(
+            args[0] as T1,
+            args[1] as T2,
+        )
+    }
+
 inline fun <reified T, R> combineState(
     vararg flows: StateFlow<T>,
     crossinline transform: (Array<T>) -> R,
@@ -154,6 +182,12 @@ inline fun <reified T, R> combineState(
 ```
 
 ## まとめ
+
+`StateFlow` は強力ですが、その変換には時として冗長なコードが必要でした。今回紹介した `mapState` と `combineState` はそれらの問題を解決する以下のメリットを提供します。
+
+- シンプルで直感的な実装で変換・合成が可能
+- `CoroutineScope` を必要としない
+- `value` プロパティを通じて同期的に最新の状態を取得できる
 
 ## 参考文献
 
