@@ -56,7 +56,9 @@ class UserViewModel : ViewModel() {
 - **効率性**：必要時のみ計算を実行し、メモリにキャッシュしない
 - **互換性**：`StateFlow` との完全な互換性
 
-`mapState` / `combineState` は `StateFlow` を直接実装し、値を参照する際に `transform` を実行するように実装されます：
+`mapState` / `combineState` は `StateFlow` を直接実装し、値を参照する際に `transform` を実行するように実装されます[^suppress-optin]：
+
+[^suppress-optin]: `StateFlow` の実装は不安定・実験的なため、`@Suppress("UnnecessaryOptInAnnotation")` と `@OptIn(ExperimentalForInheritanceCoroutinesApi::class)` が必要です：[kotlinx.coroutines Issue #3770](https://github.com/Kotlin/kotlinx.coroutines/issues/3770)
 
 ```kotlin
 inline fun <T, R> StateFlow<T>.mapState(
@@ -180,5 +182,7 @@ map / combine + stateIn（従来手法）と mapState / combineState（提案手
 https://kotlinlang.org/docs/flow.html
 
 https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/-state-flow/
+
+https://github.com/Kotlin/kotlinx.coroutines/issues/3770
 
 https://github.com/Daiji256/android-showcase/tree/e84f98bcec79c8c5aecae63cc4a97c7411d48d2c/core/common/src/main/kotlin/io/github/daiji256/showcase/core/common/stateflow
