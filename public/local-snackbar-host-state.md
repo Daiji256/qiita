@@ -16,17 +16,17 @@ ignorePublish: true
 
 # LocalSnackbarHostState: CompositionLocal による SnackbarHostState の管理方法
 
-モバイルアプリにおいてユーザーへの情報伝達は非常に重要です。その中でも、短時間でユーザーにフィードバックを伝える際に便利な UI 要素として snackbar があります。
+モバイルアプリにおいてユーザーへの情報伝達は非常に重要です。その中でも、短時間でユーザーにフィードバックを伝える際に便利な UI 要素として Snackbar があります。
 
-この記事では、Compose における snackbar の基本から、画面などのスコープを意識した snackbar の状態・表示を `CompositionLocal` によりうまく扱う方法を紹介します。
+この記事では、Compose における Snackbar の基本から、画面などのスコープを意識した Snackbar の状態・表示を `CompositionLocal` によりうまく扱う方法を紹介します。
 
 ## Snackbar とは
 
 Snackbar は、画面の下部に一時的に表示される UI 要素で、ユーザーへの短いメッセージやアクション可能なフィードバックを提供します。
 
-Android には類似の UI 要素として toast があります。Snackbar は Toast には以下のような違いがあります。この比較では、表示期間・アクション・デザインといった機能性が注目されることが多いですが、この記事では、「スコープ」をより意識します。
+Android には類似の UI 要素として Toast があります。Snackbar は Toast と以下のような点で異なります。表示期間・アクション・デザインといった機能性が注目されることが多いですが、この記事では「スコープ」に着目します。
 
-Snackbar は表示する要因になった画面やアプリ内で表示されます。そのため、画面遷移などによって表示されなくなる必要があります。Snackbar を扱うとき、どの画面に表示するかは意識する必要がります。
+Snackbar は表示する要因になった画面やアプリ内で表示されます。そのため、画面遷移などによって表示されなくなる必要があります。Snackbar を扱うとき、どの画面に表示するかは意識する必要があります。
 
 |              | Snackbar                             | Toast                                |
 | :----------- | :----------------------------------- | :----------------------------------- |
@@ -40,9 +40,9 @@ Snackbar は表示する要因になった画面やアプリ内で表示され�
 
 ## Compose における Snackbar
 
-Compose で snackbar を表示するには、`SnackbarHost` と `SnackbarHostState` を使用します。
+Compose で Snackbar を表示するには、`SnackbarHost` と `SnackbarHostState` を使用します。
 
-`SnackbarHost` は snackbar の表示領域を定義する Composable 関数です。通常、`Scaffold`（Material Design による基本的な画面レイアウト）の `snackbarHost` に配置して利用します。これにより、snackbar が画面の適切な位置に表示されるようになります。
+`SnackbarHost` は Snackbar の表示領域を定義する Composable 関数です。通常、`Scaffold`（Material Design による基本的な画面レイアウト）の `snackbarHost` に配置して利用します。これにより、Snackbar が画面の適切な位置に表示されるようになります。
 
 ```kotlin
 Scaffold(
@@ -55,7 +55,7 @@ Scaffold(
 )
 ```
 
-そして、実際に snackbar の表示・非表示やメッセージ内容などの制御を行うのが `SnackbarHostState` です。これは UI の状態を保持するステートホルダーであり、Composable 関数から利用する場合は `remember` を使って状態を記憶させます。
+そして、実際に Snackbar の表示・非表示やメッセージ内容などの制御を行うのが `SnackbarHostState` です。これは UI の状態を保持するステートホルダーであり、Composable 関数から利用する場合は `remember` を使って状態を記憶させます。
 
 ```kotlin
 val snackbarHostState = remember { SnackbarHostState() }
@@ -72,19 +72,19 @@ Button(
         }
     },
 ) {
-    Text(text = "show snackbar")
+    Text(text = "Show Snackbar")
 }
 ```
 
 ## `CompositionLocal` とは
 
-Snackbar は画面などの特定のスコープを意識して表示を切り替える必要があります。そのため、画面ごとに `SnackbarHost` と `SnackbarHostState` が必要になるのが一般的です。しかし、アプリ内で深くネストされた子・孫コンポーネントから snackbar を表示したい場合、`SnackbarHostState` を親コンポーネントから引数として順々に渡していくバケツリレー（Props Drilling）が発生し、コードの保守性が低下することがあります。
+Snackbar は画面などの特定のスコープを意識して表示を切り替える必要があります。そのため、画面ごとに `SnackbarHost` と `SnackbarHostState` が必要になるのが一般的です。しかし、アプリ内で深くネストされた子・孫コンポーネントから Snackbar を表示したい場合、`SnackbarHostState` を親コンポーネントから引数として順々に渡していくバケツリレー（Props Drilling）が発生し、コードの保守性が低下することがあります。
 
 そこで、`CompositionLocal` が役立ちます。`CompositionLocal` は、Compose の composition を通じてデータやサービスを暗黙的に「渡す」ための仕組みです。通常の引数によるデータ渡しとは異なり、階層の深い部分にある Composable 関数でも、親から明示的に引数として渡されなくても、特定の `CompositionLocal` で提供された値にアクセスできるようになります。
 
-これにより、「この画面ではこの `SnackbarHostState` を利用する」といった、スコープに紐づいた snackbar の管理が可能になります。子コンポーネントは、自動的にそのスコープに合わせた `SnackbarHostState` を利用できるため、コードがよりすっきりと記述できます。
+これにより、「この画面ではこの `SnackbarHostState` を利用する」といった、スコープに紐づいた Snackbar の管理が可能になります。子コンポーネントは、自動的にそのスコープに合わせた `SnackbarHostState` を利用できるため、コードがよりすっきりと記述できます。
 
-`CompositionLocal` を使って snackbar を管理する具体的な例を紹介します。まず、`SnackbarHostState` を保持する `CompositionLocal` を定義します。
+`CompositionLocal` を使って Snackbar を管理する具体的な例を紹介します。まず、`SnackbarHostState` を保持する `CompositionLocal` を定義します。
 
 ```kotlin
 val LocalSnackbarHostState = staticCompositionLocalOf { SnackbarHostState() }
@@ -94,7 +94,7 @@ val LocalSnackbarHostState = staticCompositionLocalOf { SnackbarHostState() }
 
 `Scaffold` を含む Composable 関数で `LocalSnackbarHostState` を提供し、その下位の Composable 関数から `SnackbarHostState` を利用できるようにします。
 
-このように `MyScaffold` を実装した場合、それ以下のどの Composable 関数からでも、以下のように `LocalSnackbarHostState.current` を使って `SnackbarHostState` を取得し、その画面に snackbar を表示できるようになります。つまり、この `Something` は、`MyScaffold` 内に配置されていれば、`MyScaffold` に snackbar を表示します。
+このように `MyScaffold` を実装しておけば、それ以下の Composable 関数からでも `LocalSnackbarHostState.current` を使って `SnackbarHostState` を取得し、その画面に Snackbar を表示できます。つまり、この `Something` は、`MyScaffold` 内に配置されていれば、`MyScaffold` に Snackbar を表示します。
 
 ```kotlin
 @Composable
@@ -123,18 +123,18 @@ fun Something() {
     Button(
         onClick = {
             coroutineScope.launch {
-                snackbarHostState.showSnackbar(message = "message")
+                snackbarHostState.showSnackbar(message = "Message")
             }
         },
     ) {
-        Text(text = "show snackbar")
+        Text(text = "Show Snackbar")
     }
 }
 ```
 
 ### `NavGraphBuilder.composable` に対して
 
-`Scaffold` を利用しない場合や、`Scaffold` よりも広い範囲で snackbar のスコープを管理したい場合は、ナビゲーショングラフ定義時に `SnackbarHostState` を提供すると良いでしょう。この場合も同様に `CompositionLocalProvider` を利用できます。これにより、特定の画面（ルート）に遷移したときに、その画面でのみ有効な `SnackbarHostState` が `CompositionLocal` として提供されます。
+`Scaffold` を利用しない場合や、`Scaffold` よりも広い範囲で Snackbar のスコープを管理したい場合は、ナビゲーショングラフ定義時に `SnackbarHostState` を提供すると良いでしょう。この場合も同様に `CompositionLocalProvider` を利用できます。これにより、特定の画面（ルート）に遷移したときに、その画面でのみ有効な `SnackbarHostState` が `CompositionLocal` として提供されます。
 
 このように `NavGraphBuilder.myComposable` を実装した場合、`LocalSnackbarHostState.current` を使って同様の `SnackbarHostState` を取得できます。
 
@@ -153,7 +153,7 @@ inline fun <reified T : Any> NavGraphBuilder.myComposable(
 
 ## 他にも便利なこと
 
-`CompositionLocal` を使うと、コンポーネントから直接 snackbar を操作できるようになるだけでなく、よりアプリケーション全体で利用可能な共通ロジックを実装する際に便利です。例えば、以下のように URI を開く処理でエラーが発生した場合に snackbar を表示する独自の `UriHandler` を定義できます。
+`CompositionLocal` を使うと、コンポーネントから直接 Snackbar を操作できるようになるだけでなく、よりアプリケーション全体で利用可能な共通ロジックを実装する際に便利です。例えば、以下のように URI を開く処理でエラーが発生した場合に Snackbar を表示する独自の `UriHandler` を定義できます。
 
 この `rememberMyUriHandler` は、`LocalSnackbarHostState` に依存しています。もし、`LocalSnackbarHostState` が `CompositionLocal` として提供されていなければ、これを呼び出すたびに `SnackbarHostState` を引数で渡す必要があり、使い勝手が悪いです。
 
@@ -184,9 +184,9 @@ fun rememberMyUriHandler(): UriHandler {
 
 ## まとめ
 
-この記事では、Compose における snackbar の基本から、`SnackbarHostState` を `CompositionLocal` を使って管理する方法について紹介しました。`CompositionLocal` を使うことで、snackbar のスコープをうまく扱うことができ、以下のようなメリットがあります。
+この記事では、Compose における Snackbar の基本から、`SnackbarHostState` を `CompositionLocal` を使って管理する方法について紹介しました。`CompositionLocal` を使うことで、Snackbar のスコープをうまく扱うことができ、以下のようなメリットがあります。
 
-- スコープ範囲の明確化: 子コンポーネントが、そのスコープに紐づく snackbar を表示できるようになる
+- スコープ範囲の明確化: 子コンポーネントが、そのスコープに紐づく Snackbar を表示できるようになる
 - コードの集約: `SnackbarHostState` を扱うためのコードが 1 箇所に集約され、他のコンポーネントは表示のための実装に専念しやすくなる
 - バケツリレーの解消: `SnackbarHostState` を引数で渡す必要がなくなるため、コードの可読性と保守性が向上する
 
