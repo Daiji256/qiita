@@ -1,7 +1,11 @@
 ---
 title: "LocalSnackbarHostState: CompositionLocal による SnackbarHostState の管理方法"
 tags:
-  - ""
+  - Android
+  - Kotlin
+  - JetpackCompose
+  - Snackbar
+  - CompositionLocal
 private: false
 updated_at: ""
 id: null
