@@ -16,15 +16,20 @@ ignorePublish: true
 
 # Hilt で Composable に DI する
 
-Composable 関数内で、Hilt で provides / binds したオブジェクトを扱いたいことがあります。Composable と Hilt を使っている場合、多くの場合は ViewModel を利用します。`@HiltViewModel` でアノテートされた ViewModel に依存関係を inject することで、Composable からも間接的にそのオブジェクトを利用できます。
+Composable 関数内で、Hilt で provides / binds したオブジェクトを扱いたいことがあります。Composable と Hilt を使っているとき、多くの場合は ViewModel を利用します。`@HiltViewModel` に inject することで、Composable からも間接的にそのオブジェクトを利用できます。
 
-しかし、設計の都合などにより、ViewModel を経由したくない場合もあります。また、`CompositionLocal` も使いたくない場合もあります。
+しかし、以下のような場合には、ViewModel を経由したくない場合もあります：
+
+- Composable 内で、ViewModel の概念を持ち込みたくない場合
+- 単発的にその機能に直接的な依存関係を持ちたい場合
 
 そこで、本記事では Composable で直接的に Hilt で provides / binds されたオブジェクトを扱う方法を紹介します。
 
-## エントリポイント
+## エントリポイントとは
 
-Hilt は Composable への直接的な依存関係の注入に対応していないため、inject の対象をエントリポイントとして定義する必要があります。
+Hilt は Composable の対応をしていないため、inject の対象をエントリポイントとして定義する必要があります。
+
+エントリポイント（Entry Point）とは、Hilt の管理対象外のコードから、Hilt で管理されているオブジェクトにアクセスするためのインターフェースです。通常の `@Inject` が使えない場所で、依存関係を取得したい場合に使用します。
 
 エントリポイントの作成には `@EntryPoint` アノテーションを使用します。エントリポイント内は Hilt の管理対象となり、オブジェクトのグラフに入ります。これにより Hilt の管理対象外の領域から、エントリポイントを通して依存関係にアクセスできます。
 
@@ -42,7 +47,9 @@ interface FooEntryPoint {
 
 エントリポイントにアクセスするには、`EntryPointAccessors` を使用します。エントリポイントがどこにインストールされているかで、引数が変わります。`SingletonComponent` にインストールされている場合は、`ApplicationContext` を使用します。そして、エントリポイントから扱いたいオブジェクトを取得します。
 
-Composable 内でこれを行いたい場合は、`LocalContext` により `ApplicationContext` を取得します：
+Composable 内でこれを行いたい場合は、`LocalContext` により `ApplicationContext` を取得します[^remember]：
+
+[^remember]: `remember` を使用することで、リコンポジション時にオブジェクトが再作成されることを防いでいます。
 
 ```kotlin
 @Composable
@@ -54,7 +61,7 @@ fun rememberFoo(): Foo {
 }
 ```
 
-複数のエントリポイントを扱う場合は、Composable 内でエントリポイントを取得するための関数を定義すると良いでしょう：
+いくつかのエントリポイントを扱う場合は、Composable 内でエントリポイントを取得するための関数を定義すると良いでしょう：
 
 ```kotlin
 @Composable
