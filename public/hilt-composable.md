@@ -16,7 +16,7 @@ ignorePublish: true
 
 # Hilt で Composable に DI する
 
-Composable 関数内で、Hilt で provides / binds したオブジェクトを扱いたいことがあります。Composable と Hilt を使っている場合、多くの場合は ViewModel を利用します。`@HiltViewModel` に Inject することで、Composable からも間接的にそのオブジェクトを利用できます。
+Composable 関数内で、Hilt で provides / binds したオブジェクトを扱いたいことがあります。Composable と Hilt を使っている場合、多くの場合は ViewModel を利用します。`@HiltViewModel` でアノテートされた ViewModel に依存関係を inject することで、Composable からも間接的にそのオブジェクトを利用できます。
 
 しかし、設計の都合などにより、ViewModel を経由したくない場合もあります。また、`CompositionLocal` も使いたくない場合もあります。
 
@@ -24,7 +24,7 @@ Composable 関数内で、Hilt で provides / binds したオブジェクトを�
 
 ## エントリポイント
 
-Hilt は Composable の対応をしていないため、inject の対象をエントリポイントとして定義する必要があります。
+Hilt は Composable への直接的な依存関係の注入に対応していないため、inject の対象をエントリポイントとして定義する必要があります。
 
 エントリポイントの作成には `@EntryPoint` アノテーションを使用します。エントリポイント内は Hilt の管理対象となり、オブジェクトのグラフに入ります。これにより Hilt の管理対象外の領域から、エントリポイントを通して依存関係にアクセスできます。
 
@@ -42,7 +42,7 @@ interface FooEntryPoint {
 
 エントリポイントにアクセスするには、`EntryPointAccessors` を使用します。エントリポイントがどこにインストールされているかで、引数が変わります。`SingletonComponent` にインストールされている場合は、`ApplicationContext` を使用します。そして、エントリポイントから扱いたいオブジェクトを取得します。
 
-Composable 内でこれを行いたい場合は、`LocalContext` などにより `ApplicationContext` を取得すれば良いでしょう：
+Composable 内でこれを行いたい場合は、`LocalContext` により `ApplicationContext` を取得します：
 
 ```kotlin
 @Composable
@@ -54,7 +54,7 @@ fun rememberFoo(): Foo {
 }
 ```
 
-いくつかのエントリポイントを扱う場合は、Composable 内でエントリポイントを取得するための関数を定義すると良いでしょう：
+複数のエントリポイントを扱う場合は、Composable 内でエントリポイントを取得するための関数を定義すると良いでしょう：
 
 ```kotlin
 @Composable
@@ -106,11 +106,18 @@ interface ComposableComponentBuilderEntryPoint {
 }
 ```
 
+## 注意点
+
+- エントリポイントを使用すると、Hilt の自動的な依存関係管理の恩恵を一部失うことになります
+- パフォーマンスの観点から、`remember` を使用してオブジェクトの再作成を避けることが重要です
+- カスタムスコープを使用する場合は、適切なライフサイクル管理が必要です
+
 ## まとめ
 
 - エントリポイントを使うことで Composable から Hilt で provides / binds したオブジェクトを取得できる
 - エントリポイントは `EntryPointAccessors` とスコープにあった `Context` によりアクセスできる
 - Composable 用のスコープを扱いたい場合は、独自で定義できる
+- エントリポイントの使用はパフォーマンスや設計への影響を考慮して慎重に行う
 
 ## 参考
 
