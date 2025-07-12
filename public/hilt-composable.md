@@ -14,7 +14,7 @@ slide: false
 ignorePublish: true
 ---
 
-# Hilt で Composable に DI する
+# EntryPoint を使った Composable 関数への依存性注入 with Hilt & Compose
 
 Composable 関数内で、Hilt によって `@Provides` や `@Binds` で提供されたオブジェクトを直接的に扱いたい場面があります。
 
