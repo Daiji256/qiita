@@ -18,7 +18,7 @@ ignorePublish: true
 
 Composable 関数内で、Hilt によって `@Provides` や `@Binds` により提供されたオブジェクトを扱いたい場面があります。通常、Composable と Hilt を併用する際は ViewModel を通じて依存オブジェクトを取得します。たとえば `@HiltViewModel` によって依存関係を注入し、それを Composable から利用するといった形です。
 
-しかし、次のような理由から ViewModel を経由したくない場合もあります：
+たとえば、ロガーや Analytics 機能など、Composable 内外から利用する共通実装であるとします。この場合、次のような理由から ViewModel を経由したくない場合もあります：
 
 - Composable 内に ViewModel の概念を持ち込みたくない
 - 特定機能に対して、より直接的に依存させたい
