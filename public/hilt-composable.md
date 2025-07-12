@@ -18,7 +18,7 @@ ignorePublish: true
 
 Composable 関数内で、Hilt によって `@Provides` や `@Binds` で提供されたオブジェクトを直接的に扱いたい場面があります。
 
-通常、Hilt を用いた依存関係の注入は ViewModel を経由して行います。たとえば `@HiltViewModel` に依存関係を注入し、Composable からその ViewModel を利用することで間接的に依存オブジェクトへアクセスします。
+通常、Hilt を用いた依存性注入は ViewModel を経由して行います。たとえば `@HiltViewModel` に依存性注入し、Composable からその ViewModel を利用することで間接的に依存オブジェクトへアクセスします。
 
 しかし、以下のようなケースでは ViewModel を使わずに依存オブジェクトを直接取得したい場合があります：
 
@@ -32,7 +32,7 @@ Composable 関数内で、Hilt によって `@Provides` や `@Binds` で提供�
 
 Hilt は Composable に対して直接的な DI を提供していません。そのため、Hilt 管理下のオブジェクトを取得するには「エントリポイント（Entry Point）」を定義する必要があります。
 
-エントリポイントとは、`@Inject` が使用できない場所（Composable 関数や主要な Android のクラス以外）から、Hilt が管理する依存関係へアクセスするためのインターフェースです。
+エントリポイントとは、`@Inject` が使用できない場所（Composable 関数や主要な Android のクラス以外）から、Hilt が管理する依存オブジェクトへアクセスするためのインターフェースです。
 
 エントリポイントは次のように、`@EntryPoint` と `@InstallIn` を使って定義します：
 
@@ -46,7 +46,7 @@ interface FooEntryPoint {
 
 エントリポイントは、`EntryPointAccessors` を使って取得します。対象のコンポーネントがどこにインストールされているかに応じて、使用する `Context` が変わります。たとえば `SingletonComponent` にインストールされている場合、`ApplicationContext` を使用します。
 
-つまり、コンポーネントに合った `Context` があれば、任意のタイミングで Hilt の依存関係へアクセスできます：
+つまり、コンポーネントに合った `Context` があれば、任意のタイミングで Hilt の依存オブジェクトへアクセスできます：
 
 ```kotlin
 val entryPoint = EntryPointAccessors.fromApplication<FooEntryPoint>(applicationContext)
