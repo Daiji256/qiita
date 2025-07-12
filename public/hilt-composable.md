@@ -1,5 +1,5 @@
 ---
-title: TODO
+title: EntryPoint を使った Composable 関数への依存性注入 with Hilt & Compose
 tags:
   - Android
   - Kotlin
@@ -13,8 +13,6 @@ organization_url_name: null
 slide: false
 ignorePublish: true
 ---
-
-# EntryPoint を使った Composable 関数への依存性注入 with Hilt & Compose
 
 Composable 関数内で、Hilt によって `@Provides` や `@Binds` で提供されたオブジェクトを直接的に扱いたい場面があります。
 
