@@ -16,24 +16,25 @@ ignorePublish: true
 
 # Hilt で Composable に DI する
 
-Composable 関数内で、Hilt によって `@Provides` や `@Binds` により提供されたオブジェクトを扱いたい場面があります。通常、Composable と Hilt を併用する際は ViewModel を通じて依存オブジェクトを取得します。たとえば `@HiltViewModel` によって依存関係を注入し、それを Composable から利用するといった形です。
+Composable 関数内で、Hilt によって `@Provides` や `@Binds` により提供されたオブジェクトを直接扱いたい場面があります。
 
-たとえば、ロガーや Analytics 機能など、Composable 内外から利用する共通実装であるとします。この場合、次のような理由から ViewModel を経由したくない場合もあります：
+通常、Hilt を用いた依存性の注入は ViewModel を経由して行います。たとえば `@HiltViewModel` に依存関係を注入し、Composable からその ViewModel を利用することで間接的に依存オブジェクトへアクセスします。
+
+しかし、以下のようなケースでは ViewModel を使わずに依存オブジェクトを直接取得したい場合があります：
 
 - Composable 内に ViewModel の概念を持ち込みたくない
-- 特定機能に対して、より直接的に依存させたい
+- トーストや Analytics、ログ出力などの処理を、シンプルにその場で呼び出したい
+- 単一の Composable に対して一時的に依存オブジェクトを使用したい
 
-本記事では、Composable 関数内で直接 Hilt による依存オブジェクトを扱う方法を紹介します。
+本記事では、Composable 関数から直接 Hilt による依存オブジェクトを取得する方法を紹介します。
 
 ## エントリポイントとは
 
-Hilt は Composable に直接対応していないため、依存オブジェクトを取得するには「エントリポイント」を定義する必要があります。
+Hilt は Composable に対して直接的な DI を提供していません。そのため、Hilt 管理下のオブジェクトを取得するには「エントリポイント（Entry Point）」を定義する必要があります。
 
-エントリポイント（Entry Point）とは、Hilt の管理外にあるコードから、Hilt 管理下のオブジェクトにアクセスするためのインターフェースです。`@Inject` が使えない場所でも、エントリポイントを通じて依存関係を取得できます。
+エントリポイントとは、`@Inject` が使用できない場所（Composable 関数や主要な Android のクラス以外）から、Hilt が管理する依存関係へアクセスするためのインターフェースです。
 
-エントリポイントは `@EntryPoint` アノテーションを付与して定義します。これにより Hilt のオブジェクトグラフに登録され、管理外の領域から依存を取得できるようになります。
-
-たとえば、`SingletonComponent` にインストールされたエントリポイントは次のように定義します：
+エントリポイントは次のように、`@EntryPoint` と `@InstallIn` を使って定義します：
 
 ```kotlin
 @EntryPoint
@@ -43,13 +44,18 @@ interface FooEntryPoint {
 }
 ```
 
+エントリポイントには `EntryPointAccessors` を使って取得します。対象のコンポーネントがどこにインストールされているかに応じて、使用する `Context` が変わります。たとえば `SingletonComponent` にインストールされている場合、`ApplicationContext` を使用します。
+
+つまり、コンポーネントに合った `Context` があれば、任意のタイミングで Hilt による依存関係へアクセスできます：
+
+```kotlin
+val entryPont = EntryPointAccessors.fromApplication<FooEntryPoint>(applicationContext)
+val foo = entryPont.foo
+```
+
 ## Composable 内でエントリポイントを取得する
 
-エントリポイントへのアクセスには `EntryPointAccessors` を使います。どのコンポーネントにインストールされているかによって、必要な `Context` が異なります。`SingletonComponent` の場合は `ApplicationContext` を用います。
-
-Composable 内では、`LocalContext` を用いて取得した `ApplicationContext` によりエントリポイントへアクセスします[^remember]：
-
-[^remember]: `remember` を使うことで、リコンポジション時にオブジェクトが再生成されるのを防ぎます。
+Composable 関数では `LocalContext.current` によって `Context` を取得できます。それにより、Composable 関数内でエントリポイントを取得し、依存オブジェクトにアクセスできます[^remember]。
 
 ```kotlin
 @Composable
@@ -75,9 +81,9 @@ inline fun <reified T : Any> rememberSingletonEntryPoint(): T {
 
 ## Composable にスコープを定義する
 
-前節では `SingletonComponent` を使いましたが、Composable により近いスコープで依存管理を行いたい場合もあります。その場合は、独自のスコープを `DefineComponent` を用いて実装します。
+アプリ全体で共有する `SingletonComponent` ではなく、Composable 専用のスコープで依存関係を管理したい場合もあります。
 
-`ActivityComponent` の子コンポーネントとして `ComposableComponent` を定義します：
+そのような場合は、独自のスコープとコンポーネントを `@DefineComponent` を使って定義します。以下は、`ActivityComponent` の子として `ComposableComponent` を定義する例です：
 
 ```kotlin
 @Scope
@@ -86,11 +92,14 @@ annotation class ComposableScoped
 @ComposableScoped
 @DefineComponent(parent = ActivityComponent::class)
 interface ComposableComponent
+
+@DefineComponent.Builder
+interface ComposableComponentBuilder {
+    fun build(): ComposableComponent
+}
 ```
 
-この `ComposableComponent` の場合は エントリポイントの取得には `Activity` が必要です。
-
-Composable 内から `ComposableComponent` にアクセスするには、以下のようにします：
+この場合、エントリポイントの取得には `Activity` が必要になります。Compose 環境では `LocalActivity.current` により取得できます：
 
 ```kotlin
 @Composable
@@ -103,11 +112,6 @@ inline fun <reified T : Any> rememberComposableEntryPoint(): T {
     }
 }
 
-@DefineComponent.Builder
-interface ComposableComponentBuilder {
-    fun build(): ComposableComponent
-}
-
 @EntryPoint
 @InstallIn(ActivityComponent::class)
 interface ComposableComponentBuilderEntryPoint {
@@ -117,9 +121,9 @@ interface ComposableComponentBuilderEntryPoint {
 
 ## まとめ
 
-- Hilt のエントリポイントを用いれば、Composable 関数内で依存オブジェクトを直接取得可能
-- `EntryPointAccessors` を使い、スコープに応じた `Context` を与えることでエントリポイントにアクセス可能
-- 独自の Composable スコープを定義することで、より柔軟な依存管理が可能
+- Composable 関数から直接 Hilt による依存オブジェクトを扱うには、エントリポイントを定義する
+- `EntryPointAccessors` を使い、スコープに応じた `Context` を用いることでエントリポイントを取得可能
+- 必要に応じて独自スコープ（`ComposableScoped`）とコンポーネント（`ComposableComponent`）を定義することで、より細かい依存関係の制御が可能
 
 ## 参考文献
 
