@@ -7,11 +7,11 @@ tags:
   - JetpackCompose
   - Hilt
 private: false
-updated_at: ""
-id: null
+updated_at: "2025-07-12T10:36:59+09:00"
+id: 2a9b4690f209db1fe878
 organization_url_name: null
 slide: false
-ignorePublish: true
+ignorePublish: false
 ---
 
 Composable 関数内で、Hilt によって `@Provides` や `@Binds` で提供されたオブジェクトを直接的に扱いたい場面があります。
@@ -53,7 +53,7 @@ val foo = entryPoint.foo
 
 ## Composable 内でエントリポイントを取得する
 
-Composable 関数では `LocalContext.current` によって `Context` を取得できます。それにより、Composable 関数内でエントリポイントを取得し、依存オブジェクトにアクセスできます。
+Composable 関数では `LocalContext.current` によって `Context` を取得できます。それにより、Composable 関数内でエントリポイントを取得し、依存オブジェクトにアクセスできます：
 
 ```kotlin
 @Composable
