@@ -16,24 +16,24 @@ ignorePublish: true
 
 # Hilt で Composable に DI する
 
-Composable 関数内で、Hilt で provides / binds したオブジェクトを扱いたいことがあります。Composable と Hilt を使っているとき、多くの場合は ViewModel を利用します。`@HiltViewModel` に inject することで、Composable からも間接的にそのオブジェクトを利用できます。
+Composable 関数内で、Hilt によって `@Provides` や `@Binds` により提供されたオブジェクトを扱いたい場面があります。通常、Composable と Hilt を併用する際は ViewModel を通じて依存オブジェクトを取得します。たとえば `@HiltViewModel` によって依存関係を注入し、それを Composable から利用するといった形です。
 
-しかし、以下のような場合には、ViewModel を経由したくない場合もあります：
+しかし、次のような理由から ViewModel を経由したくない場合もあります：
 
-- Composable 内で、ViewModel の概念を持ち込みたくない場合
-- 単発的にその機能に直接的な依存関係を持ちたい場合
+- Composable 内に ViewModel の概念を持ち込みたくない
+- 特定機能に対して、より直接的に依存させたい
 
-そこで、本記事では Composable で直接的に Hilt で provides / binds されたオブジェクトを扱う方法を紹介します。
+本記事では、Composable 関数内で直接 Hilt による依存オブジェクトを扱う方法を紹介します。
 
 ## エントリポイントとは
 
-Hilt は Composable の対応をしていないため、inject の対象をエントリポイントとして定義する必要があります。
+Hilt は Composable に直接対応していないため、依存オブジェクトを取得するには「エントリポイント」を定義する必要があります。
 
-エントリポイント（Entry Point）とは、Hilt の管理対象外のコードから、Hilt で管理されているオブジェクトにアクセスするためのインターフェースです。通常の `@Inject` が使えない場所で、依存関係を取得したい場合に使用します。
+エントリポイント（Entry Point）とは、Hilt の管理外にあるコードから、Hilt 管理下のオブジェクトにアクセスするためのインターフェースです。`@Inject` が使えない場所でも、エントリポイントを通じて依存関係を取得できます。
 
-エントリポイントの作成には `@EntryPoint` アノテーションを使用します。エントリポイント内は Hilt の管理対象となり、オブジェクトのグラフに入ります。これにより Hilt の管理対象外の領域から、エントリポイントを通して依存関係にアクセスできます。
+エントリポイントは `@EntryPoint` アノテーションを付与して定義します。これにより Hilt のオブジェクトグラフに登録され、管理外の領域から依存を取得できるようになります。
 
-たとえば、`SingletonComponent` にインストールするエントリポイントは、このように定義できます：
+たとえば、`SingletonComponent` にインストールされたエントリポイントは次のように定義します：
 
 ```kotlin
 @EntryPoint
@@ -43,13 +43,13 @@ interface FooEntryPoint {
 }
 ```
 
-## Composable 内でエントリポイントを取得
+## Composable 内でエントリポイントを取得する
 
-エントリポイントにアクセスするには、`EntryPointAccessors` を使用します。エントリポイントがどこにインストールされているかで、引数が変わります。`SingletonComponent` にインストールされている場合は、`ApplicationContext` を使用します。そして、エントリポイントから扱いたいオブジェクトを取得します。
+エントリポイントへのアクセスには `EntryPointAccessors` を使います。どのコンポーネントにインストールされているかによって、必要な `Context` が異なります。`SingletonComponent` の場合は `ApplicationContext` を用います。
 
-Composable 内でこれを行いたい場合は、`LocalContext` により `ApplicationContext` を取得します[^remember]：
+Composable 内では、`LocalContext` を用いて取得した `ApplicationContext` によりエントリポイントへアクセスします[^remember]：
 
-[^remember]: `remember` を使用することで、リコンポジション時にオブジェクトが再作成されることを防いでいます。
+[^remember]: `remember` を使うことで、リコンポジション時にオブジェクトが再生成されるのを防ぎます。
 
 ```kotlin
 @Composable
@@ -61,7 +61,7 @@ fun rememberFoo(): Foo {
 }
 ```
 
-いくつかのエントリポイントを扱う場合は、Composable 内でエントリポイントを取得するための関数を定義すると良いでしょう：
+複数のエントリポイントを扱う場合は、以下のように汎用的な関数を定義しておくと便利です：
 
 ```kotlin
 @Composable
@@ -73,9 +73,11 @@ inline fun <reified T : Any> rememberSingletonEntryPoint(): T {
 }
 ```
 
-## Composable Scoped
+## Composable にスコープを定義する
 
-前節では `SingletonComponent` を利用しました。しかし、Composable 用のスコープで扱いたい場合もあるでしょう。その場合は、専用のスコープを定義します：
+前節では `SingletonComponent` を使いましたが、Composable により近いスコープで依存管理を行いたい場合もあります。その場合は、独自のスコープを `DefineComponent` を用いて実装します。
+
+`ActivityComponent` の子コンポーネントとして `ComposableComponent` を定義します：
 
 ```kotlin
 @Scope
@@ -86,9 +88,9 @@ annotation class ComposableScoped
 interface ComposableComponent
 ```
 
-Composable からアクセスする場合は、`SingletonComponent` の時と同様にエントリポイントを用います。`ComposableComponent` は `ActivityComponent` 下にあるため、`ActivityContext` が必要です。
+この `ComposableComponent` の場合は エントリポイントの取得には `Activity` が必要です。
 
-Composable 内から `ComposableComponent` にインストールしたエントリポイントにアクセスするには、以下のように実装します：
+Composable 内から `ComposableComponent` にアクセスするには、以下のようにします：
 
 ```kotlin
 @Composable
@@ -113,20 +115,13 @@ interface ComposableComponentBuilderEntryPoint {
 }
 ```
 
-## 注意点
-
-- エントリポイントを使用すると、Hilt の自動的な依存関係管理の恩恵を一部失うことになります
-- パフォーマンスの観点から、`remember` を使用してオブジェクトの再作成を避けることが重要です
-- カスタムスコープを使用する場合は、適切なライフサイクル管理が必要です
-
 ## まとめ
 
-- エントリポイントを使うことで Composable から Hilt で provides / binds したオブジェクトを取得できる
-- エントリポイントは `EntryPointAccessors` とスコープにあった `Context` によりアクセスできる
-- Composable 用のスコープを扱いたい場合は、独自で定義できる
-- エントリポイントの使用はパフォーマンスや設計への影響を考慮して慎重に行う
+- Hilt のエントリポイントを用いれば、Composable 関数内で依存オブジェクトを直接取得可能
+- `EntryPointAccessors` を使い、スコープに応じた `Context` を与えることでエントリポイントにアクセス可能
+- 独自の Composable スコープを定義することで、より柔軟な依存管理が可能
 
-## 参考
+## 参考文献
 
 https://dagger.dev/hilt/entry-points.html
 
