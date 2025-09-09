@@ -1,5 +1,5 @@
 ---
-title: 'mapState / combineState: StateFlow を同期処理で変換・合成する'
+title: "mapState / combineState: StateFlow を同期処理で変換・合成する"
 tags:
   - Android
   - Kotlin
@@ -7,7 +7,7 @@ tags:
   - coroutine
   - Stateflow
 private: false
-updated_at: '2025-06-28T20:55:34+09:00'
+updated_at: "2025-06-28T20:55:34+09:00"
 id: eb1a32c4dcaa087769f3
 organization_url_name: null
 slide: false
@@ -160,7 +160,7 @@ class UserEditViewModel : ViewModel() {
 
 ## 処理内容
 
-map / combine + stateIn（従来手法）と mapState / combineState（提案手法）の処理内容をまとめると次の通りです：
+`map` / `combine` + `stateIn`（従来手法）と `mapState` / `combineState`（提案手法）の処理内容をまとめると次の通りです：
 
 | 項目             | `map` / `combine` + `stateIn` | `mapState` / `combineState` |
 | :--------------- | :---------------------------- | :-------------------------- |
