@@ -1,5 +1,5 @@
 ---
-title: "mapState / combineState: StateFlow を同期処理で変換・合成する"
+title: 'mapState / combineState: StateFlow を同期処理で変換・合成する'
 tags:
   - Android
   - Kotlin
@@ -7,7 +7,7 @@ tags:
   - coroutine
   - Stateflow
 private: false
-updated_at: "2025-06-28T20:55:34+09:00"
+updated_at: '2025-09-09T21:46:47+09:00'
 id: eb1a32c4dcaa087769f3
 organization_url_name: null
 slide: false
