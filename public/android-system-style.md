@@ -2,13 +2,13 @@
 title: ユーザーの選んだスタイルを尊重する：Android アプリでのシステムスタイル取得
 tags:
   - Android
-  - Compose
-  - UI
   - UX
+  - UI
   - MaterialDesign
+  - Compose
 private: false
-updated_at: ""
-id: null
+updated_at: '2025-09-10T16:55:57+09:00'
+id: 52dafa49bec015700f43
 organization_url_name: null
 slide: false
 ignorePublish: false
