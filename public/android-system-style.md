@@ -115,3 +115,15 @@ enum class ColorContrast { Default, Medium, High }
 Android にはテーマ、フォントスケール、システムカラー、コントラストなど、ユーザーが設定できるシステムスタイルが存在します。
 
 これらを適切に利用することで、ユーザーの意思を反映しながらアプリ独自の世界観を維持できるようになります。Material Design を利用するかどうかに関わらず、Android の進化に沿ったスタイル対応は、これからの Android アプリ開発において重要な取り組みです。
+
+## 参考
+
+https://m3.material.io/
+
+https://developer.android.com/reference/kotlin/androidx/compose/foundation/package-summary#isSystemInDarkTheme()
+
+https://developer.android.com/reference/kotlin/androidx/compose/ui/unit/Density
+
+https://developer.android.com/reference/android/app/UiModeManager
+
+https://android.googlesource.com/platform/frameworks/base/+/refs/heads/android14-release/core/res/res/values/colors.xml
