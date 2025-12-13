@@ -26,7 +26,7 @@ Kotlin Multiplatform（KMP）で iOS アプリを開発する際、Swift と Kot
 
 しかし、Kotlin への関数呼び出しなどでインスタンスを渡している場合、画面を閉じてもすぐにはインスタンスが解放されない場合があります。つまり、`deinit` が呼ばれるタイミングが遅れます。少し時間が経過したり、他の処理が進んだ後に、ようやくインスタンスが解放されるという挙動になります。
 
-この現象を理解するには、Swift の ARC と Kotlin Native の GC という、メモリ管理方式の違いを知る必要があります。
+この現象を理解するには、Swift の ARC と Kotlin/Native の GC という、メモリ管理方式の違いを知る必要があります。
 
 ### 問題が発生する例
 
@@ -112,11 +112,11 @@ struct FooView: View {
 
 Swift だけで完結する場合、インスタンスが参照されなくなった瞬間に解放されます。これは **ARC（Automatic Reference Counting）** という仕組みによるものです。ARC はインスタンスが何箇所から参照されているかをカウントし、参照されなくなった瞬間（カウントが 0 になったとき）にインスタンスを解放します。
 
-一方、Kotlin Native では **GC（Tracing Garbage Collector）** という仕組みが使われています[^kotlin-drc]。GC は、参照されなくなったオブジェクトを定期的に検出し、まとめて解放するアプローチをとります。
+一方、Kotlin/Native では **GC（Tracing Garbage Collector）** という仕組みが使われています[^kotlin-drc]。GC は、参照されなくなったオブジェクトを定期的に検出し、まとめて解放するアプローチをとります。
 
-[^kotlin-drc]: Kotlin Native では 1.7.20 で GC がデフォルトになるまでは参照カウント方式（Deferred Reference Counting）が採用されていました。現在では参照カウント方式が廃止され、GC のみになっています。
+[^kotlin-drc]: Kotlin/Native では 1.7.20 で GC がデフォルトになるまでは参照カウント方式（Deferred Reference Counting）が採用されていました。現在では参照カウント方式が廃止され、GC のみになっています。
 
-Swift の ARC は当然、Kotlin 側からの参照もカウントします。Kotlin 側にインスタンス（またはそれを参照したクロージャ）を渡すと、Kotlin Native から Swift のインスタンスを参照している状態になります。
+Swift の ARC は当然、Kotlin 側からの参照もカウントします。Kotlin 側にインスタンス（またはそれを参照したクロージャ）を渡すと、Kotlin/Native から Swift のインスタンスを参照している状態になります。
 
 このとき、たとえ Kotlin 側の関数の実行が終了しても、Kotlin の GC が走り「このオブジェクトはもう不要だ」と判断するまでは、Swift 側のインスタンスへの参照が残り続けます。
 
@@ -168,7 +168,7 @@ FunctionKt.function { [weak self] in
 
 ## まとめ
 
-- Swift と Kotlin Native ではメモリ管理方式が異なり、Swift は ARC、Kotlin Native は GC を採用している
+- Swift と Kotlin/Native ではメモリ管理方式が異なり、Swift は ARC、Kotlin/Native は GC を採用している
 - Swift のインスタンスを Kotlin 側に渡すと、そのインスタンスの寿命は Kotlin の GC に依存するようになる
 - インスタンスの解放が遅れることは、`deinit` の呼び出しが遅れることを意味し、予期せぬ不具合につながる可能性がある
 - インスタンスそのものではなく、必要最低限のデータだけを Kotlin 側に渡すことや、弱参照を利用することで、この問題を回避できる
