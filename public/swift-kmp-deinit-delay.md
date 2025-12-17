@@ -20,7 +20,7 @@ ignorePublish: false
 
 Kotlin Multiplatform（KMP）で iOS アプリを開発する際、Swift と Kotlin の相互運用は避けて通れません。KMP は非常に便利ですが、トラブルなく使いこなすには Swift と Kotlin/Native 両方のメモリ管理の特性をある程度理解している必要があります。
 
-この記事では、両者のメモリ管理の違いを簡単に紹介した後、この違いを理解していないと、Swift 側を担当するエンジニアにとって「不可解」に見える挙動について解説します。
+この記事では、両者のメモリ管理の違いを簡単に紹介した後、この違いを理解していないと、Swift/iOS 側のライフサイクル管理において「不可解」に見える挙動について解説します。
 
 具体的には「Swift から Kotlin の関数等にインスタンスやその参照を渡すと、Swift 側の解放が遅延する」という事象です。
 
@@ -118,9 +118,9 @@ struct FooView: View {
 
 Swift だけで完結する場合、インスタンスが参照されなくなった瞬間に解放されます。これは **ARC（Automatic Reference Counting）** という仕組みによるものです。ARC はインスタンスが何箇所から参照されているかをカウントし、参照されなくなった瞬間（カウントが 0 になったとき）にインスタンスを解放します。
 
-一方、Kotlin/Native では **GC（Tracing Garbage Collector）** という仕組みが使われています[^kotlin-drc]。GC は、参照されなくなったオブジェクトを定期的に検出し、まとめて解放するアプローチをとります。
+一方、Kotlin/Native では **GC（Tracing Garbage Collector）** という仕組みが使われています[^kotlin-new-memory-manager]。GC は、参照されなくなったオブジェクトを定期的に検出し、まとめて解放するアプローチをとります。
 
-[^kotlin-drc]: Kotlin/Native 1.7.20 から、新しいメモリ管理方式（New Memory Manager）がデフォルトとなり GC に移行しました。それ以前は参照カウントベースの管理方式が採用されていました。
+[^kotlin-new-memory-manager]: Kotlin/Native 1.7.20 から、新しいメモリ管理方式（New Memory Manager）がデフォルトとなり GC に移行しました。それ以前は参照カウントベースの管理方式が採用されていました。
 
 Swift の ARC は当然、Kotlin 側からの参照もカウントします。Kotlin 側にインスタンス（またはそれを参照したクロージャ）を渡すと、Kotlin/Native から Swift のインスタンスを参照している状態になります。
 
