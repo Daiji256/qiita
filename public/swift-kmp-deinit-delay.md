@@ -2,9 +2,9 @@
 title: Swift/Objective-C から Kotlin へインスタンスを渡すと deinit が遅れる理由と対策
 tags:
   - KotlinMultiplatform
+  - KotlinNative
+  - Kotlin
   - Swift
-  - Objective-C
-  - GC
   - iOS
 private: false
 updated_at: ''
