@@ -14,7 +14,7 @@ ignorePublish: false
 
 この記事では Swift を例に説明しますが、Objective-C でも同様の挙動となります。
 
-Kotlin Multiplatform（KMP）で iOS アプリを開発する際、Swift と Kotlin の相互運用は避けて通れません。KMP は非常に便利ですが、トラブルなく使いこなすには Swift と Kotlin 両方の特性に詳しくある必要があります。
+Kotlin Multiplatform（KMP）で iOS アプリを開発する際、Swift と Kotlin の相互運用は避けて通れません。KMP は非常に便利ですが、トラブルなく使いこなすには Swift と Kotlin 詳しく理解している必要があります。
 
 この記事では、両者のメモリ管理の違いを簡単に紹介した後、この違いを理解していないと Swift エンジニアにとって「不可解」に見える挙動について解説します。
 
