@@ -14,6 +14,10 @@ slide: false
 ignorePublish: false
 ---
 
+本記事は、[Kotlin Advent Calendar 2025](https://qiita.com/advent-calendar/2025/kotlin) の 17 日目の記事です。
+
+## はじめに
+
 Kotlin Multiplatform（KMP）で iOS アプリを開発する際、Swift と Kotlin の相互運用は避けて通れません。KMP は非常に便利ですが、トラブルなく使いこなすには Swift と Kotlin/Native 両方のメモリ管理の特性をある程度理解している必要があります。
 
 この記事では、両者のメモリ管理の違いを簡単に紹介した後、この違いを理解していないと、Swift 側を担当するエンジニアにとって「不可解」に見える挙動について解説します。
