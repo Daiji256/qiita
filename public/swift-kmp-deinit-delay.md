@@ -14,13 +14,13 @@ slide: false
 ignorePublish: false
 ---
 
-この記事では Swift を例に説明しますが、Objective-C でも同様の挙動となります。
-
 Kotlin Multiplatform（KMP）で iOS アプリを開発する際、Swift と Kotlin の相互運用は避けて通れません。KMP は非常に便利ですが、トラブルなく使いこなすには Swift と Kotlin/Native 両方のメモリ管理の特性をある程度理解している必要があります。
 
 この記事では、両者のメモリ管理の違いを簡単に紹介した後、この違いを理解していないと、Swift 側を担当するエンジニアにとって「不可解」に見える挙動について解説します。
 
 具体的には「Swift から Kotlin の関数等にインスタンスやその参照を渡すと、Swift 側の解放が遅延する」という事象です。
+
+なお、本記事では Swift を例に説明しますが、Objective-C から Kotlin の実装を呼び出す場合でも同様の挙動となります。
 
 ## インスタンスの解放が遅れる（`deinit` が遅れる）
 
