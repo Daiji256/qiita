@@ -12,102 +12,81 @@ ignorePublish: false
 
 # GitHub Actions で orphan branch を使ってファイルを保存・取得する方法
 
+本記事は、[GitHub Actions Advent Calendar 2025](https://qiita.com/advent-calendar/2025/github-actions) の 18 日目の記事です。
+
 ## はじめに
 
-GitHub Actions を使って CI やテストを回していると、ワークフローの中で生成されたファイルを後続のワークフローから参照したい、あるいは pull request 上から直接確認できる形で残しておきたい、という場面があります。
+GitHub Actions で生成されたファイルの保存する代表的な手段として、GitHub の artifacts 機能や S3 などの外部ストレージサービスがあります。
 
-代表的な手段としては GitHub Actions の Artifacts 機能や、S3 などの外部ストレージサービスがあります。一方で、実際に使ってみると、保持期間や参照方法、認証情報の管理といった点が気になるケースもありました。
+しかし、workflow で生成されたファイルを後続の workflow から参照したい、あるいは pull request の説明文から直接参照したいという場面が出てきます。これらの点で、artifacts 機能や外部ストレージサービスでは不便に感じることになります。
 
-そこで本記事では、GitHub の orphan branch を利用してファイルを保存・取得するというアプローチと、それを GitHub Actions として実装した例を紹介します。GitHub Actions Advent Calendar 2025 の一記事として、実運用の中で得られた知見を整理します。
+そこで本記事では orphan branch を利用してファイルを保存・取得するというアプローチと、それを GitHub Actions から利用する方法を紹介します。
 
----
+## Orphan branch とは
 
-## orphan branch とは
+Git では orphan branch という親を持たない空の branch を作成できます。通常の branch とは履歴が完全に分離されており、orphan branch を削除すれば、repository から完全に削除されるため、repository の肥大化を防ぐことができます。
 
-orphan branch は、親となるコミットを持たないブランチです。通常のブランチとは履歴が完全に分離されており、リポジトリのメインの履歴には影響を与えません。
+この性質により、生成物専用の保存場所として利用できます。また、GitHub 上では通常のブランチと同様に扱えるため、raw.githubusercontent.com 経由でファイルを参照でき、pull request や issue の説明文などからファイルを直接参照できます。
 
-この性質により、生成物専用の保存場所として利用できます。また、GitHub 上では通常のブランチと同様に扱えるため、raw.githubusercontent.com 経由でファイルを参照でき、pull request や Issue に URL を貼ることも可能です。
+## Orphan branch によるファイル管理の利点
 
----
+GitHub の artifacts 機能は手軽で便利ですが、workflow 実行単位で管理され、保持期間がある点が用途によっては制約になります。また、pull request の説明文などからファイルを直接参照することができません。
 
-## orphan branch を使おうと考えた背景
+外部のサービスを使う場合は、認証情報の管理や追加のインフラが必要になります。GitHub だけで完結させたい場合には、少し大げさに感じられるかもしれません。
 
-Artifacts 機能は手軽で便利ですが、ワークフロー実行単位で管理され、保持期間がある点が用途によっては制約になります。また、pull request の説明文などから直接参照するにはやや工夫が必要です。
+これらと比べて orphan branch は、GitHub で完結し、workflow に依存せず,
+保存期間を自分で管理でき、pull request の説明文などから参照できます。アプリ開発にて、UI のスクリーンショットテストの比較をするために、複数の workflow の結果を参照したかったり、pull request 上から直接スクリーンショットを確認したいということがありました。このときに、orphan branch を利用するようになりました。
 
-外部ストレージサービスを使う場合は、認証情報の管理や追加のインフラが必要になります。CI の中だけで完結させたい場合には、少し大げさに感じることもあります。
+この利点を活かし、ファイルの保存・取得・削除を GitHub Actions として共通化することにしました。
 
-これらと比べて orphan branch は、GitHub の権限だけで完結し、保存期間を特に意識せずにファイルを残せる点が魅力でした。この利点を活かし、ファイルの保存・取得・整理を GitHub Actions として共通化することにしました。
+## 作成した GitHub Actions の紹介
 
----
+ファイルの保存・取得・削除を orphan branch を用いて行うには、いくつかの基本的なコマンドと Git 操作ができれば十分です。
 
-## 作成した GitHub Actions の概要
+今回は、再利用性を高めるために、これらの操作を GitHub Actions としてまとめました。これによりより手軽に orphan branch を利用したファイル管理が可能になります。
 
-今回作成したのは、orphan branch を使ったファイル管理を行うための 3 つの GitHub Actions と、それらをまとめたサンプルリポジトリです。
+詳しくはそれぞれの Actions の実装や[サンプル](https://github.com/Daiji256/orphan-branch-upload-download-delete-examples)を参考にしてください。
 
-### upload-to-orphan-branch
+### [`daiji256/upload-to-orphan-branch`](https://github.com/Daiji256/upload-to-orphan-branch)
 
-ワークフロー内で生成されたファイルを、指定した orphan branch にコミットして push する Action です。生成物を通常の開発履歴から分離したまま、リポジトリ内に保存できます。
+workflow 内で生成されたファイルを、指定した orphan branch にコミットして push する Action です。生成物を通常の開発履歴から分離したまま、repository 内に保存できます。
 
-### download-from-orphan-branch
-
-指定したブランチからファイルを取得し、ワークスペースに展開する Action です。別ジョブや別ワークフローから、事前に保存した生成物を再利用できます。
-
-### delete-orphan-branch
-
-不要になった orphan branch を削除するための Action です。生成物ごとにブランチを作成する運用では、定期的なクリーンアップが重要になります。
-
-### サンプルリポジトリ
-
-これら 3 つの Action を組み合わせた利用例として、アップロードからダウンロード、削除までの一連の流れを確認できるサンプルリポジトリも用意しています。
-
----
-
-## 使い方の例
-
-### ファイルを保存する
+この例では `**/bar` を除く `dir` にあるファイルを `outputs-branch-name` という orphan branch に保存します。
 
 ```yaml
-- name: Upload generated file
-  uses: Daiji256/upload-to-orphan-branch@v1
+- uses: daiji256/upload-to-orphan-branch@v1
   with:
-    branch: generated-files/example
-    path: output/result.json
+  branch: outputs-branch-name
+  path: |
+    dir
+    !**/bar
 ```
 
-この例では、`output/result.json` を `generated-files/example` という orphan branch に保存します。保存されたファイルは、GitHub 上から URL として参照できます。
+### [`daiji256/download-from-orphan-branch`](https://github.com/Daiji256/download-from-orphan-branch)
 
-### 保存したファイルを取得する
+指定した branch からファイルを取得し、ワークスペースに展開する Action です。別の workflow で事前に保存したファイルを再利用できます。
+
+この例では `outputs-branch-name` という branch からファイルを取得し、`dir` に展開します。
 
 ```yaml
-- name: Download generated file
-  uses: Daiji256/download-from-orphan-branch@v1
+- uses: daiji256/download-from-orphan-branch@v1
   with:
-    branch: generated-files/example
-    path: output
+  branch: outputs-branch-name
+  path: dir
 ```
 
-別のワークフローからでも、同じブランチを指定することでファイルを取得できます。
+### [`daiji256/delete-orphan-branch`](https://github.com/Daiji256/delete-orphan-branch)
 
-### 不要になったブランチを削除する
+不要になった orphan branch を削除するための Action です。生成物ごとに branch を作成する運用では、定期的なクリーンアップが重要になります。
+
+この例では、`orphan-output-` で始まる branch のうち、7 日以上前に作成されたものを削除します。
 
 ```yaml
-- name: Cleanup orphan branches
-  uses: Daiji256/delete-orphan-branch@v1
+- uses: daiji256/delete-orphan-branch@v1
   with:
-    branch-pattern: generated-files/.*
+    branch-regex: orphan-output-.*
+    older-than-seconds: 604800 # 7 days
 ```
-
-定期実行と組み合わせることで、リポジトリ内の orphan branch が増えすぎるのを防げます。
-
----
-
-## 実際の利用例
-
-筆者はアプリ開発の文脈で、UI テスト時に生成したスクリーンショットの保存や、過去との差分比較、その結果を pull request 上から参照する目的でこの仕組みを利用しています。具体的なワークフロー例は、以下の設定に含まれています。
-
-* [https://github.com/Daiji256/android-showcase/blob/1010840b0eb7873f50a405d6199e904ae2f0a28d/.github/workflows/unit-test.yml](https://github.com/Daiji256/android-showcase/blob/1010840b0eb7873f50a405d6199e904ae2f0a28d/.github/workflows/unit-test.yml)
-
----
 
 ## 現状の課題と今後の改善
 
@@ -115,20 +94,18 @@ Artifacts 機能は手軽で便利ですが、ワークフロー実行単位で�
 
 今後は、TypeScript での再実装や、macOS・Windows を含めた環境での動作確認、エラーハンドリングとログ出力の強化を進めたいと考えています。
 
----
-
 ## おわりに
 
 orphan branch を使ったファイル管理は、すべてのケースに適した方法ではありませんが、GitHub Actions の中だけで生成物を扱い、後から参照できる形で残したい場合には有効な選択肢になります。
 
-Artifacts や外部ストレージと使い分ける前提で、一つの実装例として参考になれば幸いです。
-
----
+ぜひ、orphan branch を活用したファイル管理を試してみてください。また、今回紹介した GitHub Actions を利用してもらえると嬉しいです。
 
 ## 参考文献
 
-* GitHub Docs: Branches
-* GitHub Docs: GitHub Actions
-* upload-to-orphan-branch リポジトリ
-* download-from-orphan-branch リポジトリ
-* delete-orphan-branch リポジトリ
+- [Git - git-switch Documentation](https://git-scm.com/docs/git-switch)
+- [GitHub Actions documentation - GitHub Docs](https://docs.github.com/en/actions)
+- [daiji256/upload-to-orphan-branch](https://github.com/Daiji256/upload-to-orphan-branch)
+- [daiji256/download-from-orphan-branch](https://github.com/Daiji256/download-from-orphan-branch)
+- [daiji256/delete-orphan-branch](https://github.com/Daiji256/delete-orphan-branch)
+- [Orphan Branch Upload / Download / Delete Examples](https://github.com/Daiji256/orphan-branch-upload-download-delete-examples)
+- [Daiji256/android-showcase/.github/workflows/unit-test.yml](https://github.com/Daiji256/android-showcase/blob/1010840b0eb7873f50a405d6199e904ae2f0a28d/.github/workflows/unit-test.yml)
