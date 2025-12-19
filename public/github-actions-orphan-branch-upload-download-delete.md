@@ -1,5 +1,5 @@
 ---
-title: newArticle001
+title: GitHub Actions で orphan ブランチを使ってファイルを保存・取得する方法
 tags:
   - GitHubActions
   - GitHub
@@ -12,8 +12,6 @@ organization_url_name: null
 slide: false
 ignorePublish: false
 ---
-
-# GitHub Actions で orphan ブランチを使ってファイルを保存・取得する方法
 
 本記事は、[GitHub Actions Advent Calendar 2025](https://qiita.com/advent-calendar/2025/github-actions) の 19 日目の記事です。
 
