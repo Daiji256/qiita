@@ -1,13 +1,13 @@
 ---
 title: GitHub Actions で orphan ブランチを使ってファイルを保存・取得する方法
 tags:
-  - GitHubActions
-  - GitHub
   - Git
+  - GitHub
   - CICD
+  - GitHubActions
 private: false
-updated_at: ''
-id: null
+updated_at: '2025-12-19T19:04:32+09:00'
+id: 8581083547aadfa17cce
 organization_url_name: null
 slide: false
 ignorePublish: false
