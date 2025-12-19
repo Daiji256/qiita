@@ -1,7 +1,10 @@
 ---
 title: newArticle001
 tags:
-  - ''
+  - GitHubActions
+  - GitHub
+  - Git
+  - CICD
 private: false
 updated_at: ''
 id: null
