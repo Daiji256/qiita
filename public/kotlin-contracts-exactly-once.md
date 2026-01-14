@@ -11,8 +11,6 @@ slide: false
 ignorePublish: false
 ---
 
-# Kotlin Contracts の InvocationKind.EXACTLY_ONCE を「1 回呼び出す」と誤解してはいけない
-
 ## はじめに
 
 Kotlin には Contracts という、関数の内部動作に関するヒントをコンパイラに提供する機能があります。これにより、コンパイラはスマートキャストや変数の初期化判定をより賢く行えるようになります。
