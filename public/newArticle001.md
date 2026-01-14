@@ -116,7 +116,7 @@ println(x) // x が未初期化のままアクセスされる（不定値）
 
 - `InvocationKind.EXACTLY_ONCE` は「1 回呼び出される」ではなく、「1 回呼び出され、正常終了する」ことを意味する
 - 例外を catch して処理を続行する関数では、`InvocationKind.EXACTLY_ONCE` を満たさない
-- Kotlin Contracts は強力だが、コンパイラを誤誘導も可能になるため、注意が必要
+- Kotlin Contracts は強力だが、コンパイラを誤誘導することも可能になるため、注意が必要
 
 ## 参考文献
 
