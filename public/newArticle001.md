@@ -16,7 +16,9 @@ ignorePublish: false
 
 Kotlin には Contracts という、関数の内部動作に関するヒントをコンパイラに提供する機能があります。これにより、コンパイラはスマートキャストや変数の初期化判定をより賢く行えるようになります。
 
-通常、コンパイラは関数の内部の実装まで深く解析しませんが、`contract` を使うことで「この関数は引数が `null` でない場合のみ `return` する」「この関数はラムダ式を必ず 1 回実行する」といった情報をコンパイラに約束（契約）できます。
+通常、コンパイラは関数の内部の実装まで深く解析しませんが、`contract` を使うことで「この関数は引数が `null` でない場合のみ `return` する」「この関数はラムダ式を必ず 1 回呼び出す」といった情報をコンパイラと契約（約束）できます。
+
+本記事では、`InvocationKind.EXACTLY_ONCE` に着目して解説します。
 
 ## Kotlin Contracts の利用例
 
@@ -24,7 +26,7 @@ Kotlin には Contracts という、関数の内部動作に関するヒント�
 
 例えば、`requireNotNull` は `contract` を利用しています。
 
-`requireNotNull` は「正常に戻り値を返したならば、引数は `null` ではない：`returns() implies (value != null)`」と実装されているためです。もしこの契約がなければ、コンパイラは `null` かもしれないと判断し、コンパイルエラーになります。
+`requireNotNull` は「正常に戻り値を返したならば、引数は `null` ではない：`returns() implies (value != null)`」とコンパイラに伝えています。もしこれがなければ、コンパイラは `null` かもしれないと判断し、以下のコードはコンパイルエラーになります。
 
 ```kotlin
 val text: String? = getTextOrNull()
@@ -38,7 +40,7 @@ println(text.length)
 
 他にも、`run` も `contract` を利用しています。
 
-通常、関数に渡すラムダ式の中で変数の初期化を試みても、コンパイラは「そのラムダ式が本当に 1 度だけ実行されるかわからない」ため、エラーとなります。しかし、`run` は「ラムダ式を必ず 1 回実行する：`callsInPlace(block, InvocationKind.EXACTLY_ONCE)`」と実装されているため、コンパイラはラムダ内での初期化を認めます。
+通常、関数に渡すラムダ式の中で変数の初期化を試みても、コンパイラは「そのラムダ式が本当に 1 度だけ呼び出されるかわからない」ため、エラーとなります。しかし、`run` は「ラムダ式を必ず 1 回呼び出す：`callsInPlace(block, InvocationKind.EXACTLY_ONCE)`」とコンパイラに伝えているため、ラムダ内での初期化を認めます。
 
 ```kotlin
 val x: Int
@@ -51,18 +53,18 @@ run {
 println(x)
 ```
 
-## `runCatching` と `EXACTLY_ONCE`
+## `runCatching` と `InvocationKind.EXACTLY_ONCE`
 
 ここからが本題です。
 
-さて、「ラムダ式を 1 回実行する」関数であれば、`EXACTLY_ONCE` をつければ良いのでしょうか？
+「ラムダ式を 1 回だけ呼び出す」関数であれば、`InvocationKind.EXACTLY_ONCE` を指定してよいのでしょうか？
 
-例えば、例外を捕捉して `Result` 型を返す自作の `runCatching` を考えてみます。`block()` は確かに 1 回呼び出されるため、一見良さそうに見えます。しかし、この `contract` 定義は不具合を引き起こす可能性があります。
+例として、例外を捕捉して `Result` 型を返す自作の `runCatching` を考えます。`block()` の呼び出し自体は確かに 1 回だけです。しかし、この関数に `EXACTLY_ONCE` を指定すると、`contract` と実際の制御フローに矛盾が生じてしまいます。
 
 ```kotlin
 inline fun <R> myRunCatching(block: () -> R): Result<R> {
     contract {
-        // 「block は必ず 1 回呼ばれる」と考えてこれを指定する
+        // 「block は必ず 1 回だけ呼ばれる」と考えてこれを指定する
         callsInPlace(block, InvocationKind.EXACTLY_ONCE)
     }
 
@@ -74,13 +76,11 @@ inline fun <R> myRunCatching(block: () -> R): Result<R> {
 }
 ```
 
-### 不具合
+### 発生する問題
 
-不具合は、以下のようなコードで発生します。
+次のコードを考えます。ラムダの途中で例外が発生するため `x` は初期化されません。しかし `myRunCatching` 自体は例外を catch して処理を続行します。コンパイラは `EXACTLY_ONCE` を信じて `x` を初期化済みと判断します。
 
-ラムダ内で例外が発生し、`x` が初期化されません。しかし、`myRunCatching` は例外を `catch` し、処理を続行します。ここで、コンパイラは `EXACTLY_ONCE`（必ず最後まで実行された）を信じて、`x` は初期化済みだと判断するため、コンパイルは通ります。
-
-結果、実行時に未初期化の値（不定値）にアクセスして予期せぬ動作を引き起こす可能性があります。
+結果として、未初期化の変数にアクセスするコードがコンパイルを通過し、実行時に不定な挙動を引き起こす可能性があります。
 
 ```kotlin
 val x: Int
@@ -95,24 +95,28 @@ println(x) // x が未初期化のままアクセスされる（不定値）
 
 ### 本質的な誤解
 
-`EXACTLY_ONCE` の誤解は、以下のように整理できます。
+`InvocationKind.EXACTLY_ONCE` に関する誤解は、次のように整理できます。
 
-- **誤解**：`block()` が 1 度だけ呼び出される
-- **正解**：`block()` が 1 度だけ呼び出され、**最後まで完走する**
+* 誤解：`block()` が 1 度だけ呼び出される
+* 正解：`block()` が 1 度だけ呼び出され、かつ例外などで中断されず正常終了する
 
-`run` の場合、ラムダ内で例外が発生すれば、その後のコードは実行されないため安全です。一方、`runCatching` のようにラムダが途中で失敗しても、正常終了して先に進む場合は、`EXACTLY_ONCE` の契約を満たせません。
+`run` の場合、ラムダ内で例外が発生すればその例外は外に伝播し、後続の処理は実行されません。そのため「初期化が完了していない状態で先に進む」ことが起きず、`EXACTLY_ONCE` を満たします。
 
-## IDE の警告
+一方、`runCatching` のようにラムダ内の例外を catch して処理を継続する関数では、`EXACTLY_ONCE` を満たせません。この場合、`EXACTLY_ONCE` ではなく `AT_MOST_ONCE` にするのが妥当でしょう。
 
-幸いなことに、最近の IDE やコンパイラはこの矛盾を検知できます。Android Studio や IntelliJ IDEA で Kotlin の K2 モード（K2 Compiler）を有効にしている場合に、以下の警告が出ます。
+## IDE による検出
+
+幸いなことに、最近の IDE やコンパイラはこの矛盾を検知できるようになっています。Android Studio や IntelliJ IDEA で K2 Compiler を有効にしている場合、次のような警告が表示されます。
 
 > Wrong invocation kind 'EXACTLY_ONCE' for 'block: () -> R' specified, the actual invocation kind is 'AT_MOST_ONCE'.
 
+これは「ラムダは高々 1 回しか呼ばれない」という、より正確な解析結果を示しています。
+
 ## まとめ
 
-Kotlin Contracts は強力ですが、「コンパイラを騙せてしまう」機能でもあります。
-
-例外処理など複雑な処理が絡むときには特に注意が必要です。実装をよく理解し、テストを実施し、IDE の警告などをうまく活用して、安全で便利なコードを書きましょう。
+- `InvocationKind.EXACTLY_ONCE` は「1 回呼び出される」ではなく、「1 回呼び出され、正常終了する」ことを意味する
+- 例外を catch して処理を続行する関数では、`InvocationKind.EXACTLY_ONCE` を満たさない
+- Kotlin Contracts は強力だが、コンパイラを誤誘導も可能になるため、注意が必要
 
 ## 参考文献
 
