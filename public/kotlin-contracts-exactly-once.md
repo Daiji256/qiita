@@ -1,7 +1,8 @@
 ---
-title: newArticle001
+title: Kotlin Contracts の InvocationKind.EXACTLY_ONCE を「1 回呼び出す」と誤解してはいけない
 tags:
-  - ''
+  - Kotlin
+  - KotlinContracts
 private: false
 updated_at: ''
 id: null
