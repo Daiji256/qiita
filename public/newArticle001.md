@@ -1,7 +1,10 @@
 ---
 title: SnapshotStateList の toString / equals / hashCode の罠
 tags:
-  - ''
+  - Android
+  - Kotlin
+  - JetpackCompose
+  - List
 private: false
 updated_at: ''
 id: null
