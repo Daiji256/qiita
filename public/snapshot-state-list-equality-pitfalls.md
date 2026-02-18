@@ -95,7 +95,7 @@ snapshotStateList == list       // false
 
 ### 通常の `List` のように扱うには
 
-`SnapshotStateList` を要素ベースで扱いたい場合は、`toList()` を使って比較対象を通常の `List` にそろえるのが安全です。
+`SnapshotStateList` を要素ベースで扱いたい場合は、`toList()` によって得られる通常の `List` を利用すると良いでしょう。
 
 `toList()` で取得した `List` は読み取り専用として扱え、`toString` / `equals` / `hashCode` も通常の `List` と同様に利用できます。また、取得後に `SnapshotStateList` 側を変更しても、すでに取得した `List` の内容は変わりません。
 
