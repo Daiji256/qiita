@@ -21,7 +21,7 @@ tags: Android, Kotlin, Jetpack Compose, List
 
 Compose で `List` を扱うとき、`mutableStateListOf` で生成される `SnapshotStateList` を利用することは多いでしょう。
 
-しかし `SnapshotStateList` の `toString` / `equals` / `hashCode` の挙動は、通常の `List` と同じ前提では扱えません。この違いを理解していないと、比較処理などで意図しない挙動に遭遇します。
+しかし `SnapshotStateList` の `toString` / `equals` / `hashCode` の挙動は、通常の `List` とは異なります。この違いを理解していないと、比較処理などで意図しない挙動に遭遇します。
 
 本記事では、次の観点について解説します：
 
