@@ -21,7 +21,7 @@ tags: Android, Kotlin, Jetpack Compose, List
 
 Compose で `List` を扱うとき、`mutableStateListOf` で生成される `SnapshotStateList` を利用することは多いでしょう。
 
-しかし `SnapshotStateList` の `toString` / `equals` / `hashCode` の挙動は、通常の `List` とは異なります。この違いを理解していないと、比較処理などで意図しない挙動に遭遇します。
+しかし `SnapshotStateList` の `toString` / `equals` / `hashCode` の挙動は、一般的な `List` とは異なります。この違いを理解していないと、比較処理などで意図しない挙動に遭遇します。
 
 本記事では、次の観点について解説します：
 
@@ -71,13 +71,13 @@ list1 == list2 // true
 
 `SnapshotStateList` は `androidx.compose.runtime.snapshots` に含まれる Compose の状態管理向け `MutableList` 実装です。
 
-この型は Snapshot システムと連携するため、通常の `List` 実装と違う挙動を持ちます。
+この型は Snapshot システムと連携するため、一般的な `List` 実装と違う挙動を持ちます。
 
 ### `toString` / `equals` / `hashCode` の違い
 
-`SnapshotStateList` では、通常の `List` のような要素ベースの `toString` / `equals` / `hashCode`を持ちません。代わりに、インスタンスの参照をベースにした実装になっています。
+`SnapshotStateList` では、一般的な `List` のような要素ベースの `toString` / `equals` / `hashCode`を持ちません。代わりに、インスタンスの参照をベースにした実装になっています。
 
-また、Kotlin の `==` 演算子は、左辺の `equals` メソッドを呼び出すため、`SnapshotStateList` と通常の `List` を比較すると、一方は要素ベースで、もう一方は参照ベースで比較されることになります。
+また、Kotlin の `==` 演算子は、左辺の `equals` メソッドを呼び出すため、`SnapshotStateList` と一般的な `List` を比較すると、一方は要素ベースで、もう一方は参照ベースで比較されることになります。
 
 ```kotlin
 val list = listOf("a", "b")
@@ -93,11 +93,11 @@ list == snapshotStateList       // true
 snapshotStateList == list       // false
 ```
 
-### 通常の `List` のように扱うには
+### 一般的な `List` として扱うには
 
-`SnapshotStateList` を要素ベースで扱いたい場合は、`toList()` によって得られる通常の `List` を利用すると良いでしょう。
+`SnapshotStateList` を要素ベースで扱いたい場合は、`toList()` によって得られる `List` を利用すると良いでしょう。
 
-`toList()` で取得した `List` は読み取り専用として扱え、`toString` / `equals` / `hashCode` も通常の `List` と同様に利用できます。また、取得後に `SnapshotStateList` 側を変更しても、すでに取得した `List` の内容は変わりません。
+`toList()` で取得した `List` は読み取り専用として扱え、`toString` / `equals` / `hashCode` も一般的な `List` と同様に利用できます。また、取得後に `SnapshotStateList` 側を変更しても、すでに取得した `List` の内容は変わりません。
 
 ```kotlin
 val snapshotStateList = mutableStateListOf("a", "b")
@@ -110,9 +110,9 @@ immutableList == listOf("a", "b")    // true
 
 ## まとめ
 
-- 通常の `List` の `toString` / `equals` / `hashCode` は要素ベースで扱われる
+- 一般的な `List` の `toString` / `equals` / `hashCode` は要素ベースで扱われる
 - `SnapshotStateList` の `toString` / `equals` / `hashCode` は参照ベースで扱われる
-- 要素比較が必要なら `toList()` により、通常の `List` と同様に扱う
+- 要素比較が必要なら `toList()` により、一般的な `List` と同様に扱う
 
 ## 参考
 
