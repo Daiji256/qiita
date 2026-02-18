@@ -41,8 +41,8 @@ Kotlin のドキュメントでは、`List` の `toString` / `equals` / `hashCod
 
 <details><summary>ドキュメントの原文</summary>
 
-> - `List.toString` should consider two lists equal if and only if they contain the same number of elements and each element in one list is equal to an element in another list at the same index. Unlike some other equals implementations, List.equals should consider two lists equal even if they are instances of different classes; the only requirement here is that both lists have to implement List interface.
-> - `List.equals` should consider two lists equal if and only if they contain the same number of elements and each element in one list is equal to an element in another list at the same index.
+> - `List.toString` should return a string containing string representation of contained elements in exact same order these elements are stored within the list.
+> - `List.equals` should consider two lists equal if and only if they contain the same number of elements and each element in one list is equal to an element in another list at the same index. Unlike some other `equals` implementations, `List.equals` should consider two lists equal even if they are instances of different classes; the only requirement here is that both lists have to implement `List` interface.
 > - `List.hashCode` should be computed as a combination of elements' hash codes using the following algorithm:
 >   ```kotlin
 >   var hashCode: Int = 1
@@ -66,13 +66,13 @@ list1 == list2 // true
 
 `SnapshotStateList` は `androidx.compose.runtime.snapshots` に含まれる Compose 用の `MutableList` 実装です。
 
-`SnapshotStateList` は Composable 関数内で使用を想定して、状態監視や Snapshot が可能になるように実装されています。
+`SnapshotStateList` は Composable 関数内での使用を想定して、状態監視や Snapshot が可能になるよう実装されています。
 
 ### `toString` / `equals` / `hashCode` の違い
 
 `SnapshotStateList` は `equals` と `hashCode` をオーバーライドしていません。そのため、参照ベース（referential equality）で扱われます。また `toString` も通常の `List` とは異なる形式で出力されます。
 
-Kotlin の `==` は左辺の `equals` を呼び出します。そのため、通常の `List` と `SnapshotStateList` を比較は非対称になります。
+Kotlin の `==` は左辺の `equals` を呼び出します。そのため、通常の `List` と `SnapshotStateList` を比較すると非対称な結果になります。
 
 次のコードで確認できます：
 
@@ -92,13 +92,15 @@ snapshotStateList == list       // false
 
 ### なぜこのような設計なのか
 
-`SnapshotStateList` は Composable で状態管理を行うためのコンテナであり、状態の変更を追跡することが主な目的です。つまり、`equals` の結果が変わってしまうと、状態の変更を正しく検知できなくなります。
+`SnapshotStateList` は Composable で状態管理を行うためのコンテナであり、状態の変更を追跡することが主な目的です。つまり、インスタンスの `equals` の結果が変わってしまうと、状態の変更を正しく検知できなくなるなどの問題につながるのかもしれません。
 
 そのため、例外的ではありますが、`SnapshotStateList` は要素の比較を行わない設計になっていると考えられます。
 
 ## 通常の `List` のように扱うには
 
 `SnapshotStateList` を通常の `List` と同様に扱いたい場合は、`toList()` を使用します。`toList()` により得られる `List` は immutable なコピーであり、通常の `List` と同様の `toString` / `equals` / `hashCode` を持ちます。
+
+なお `toList()` はスナップショット時点の内容のコピーを返します。その後 `SnapshotStateList` を変更しても、取得済みの `List` には影響しません。
 
 ```kotlin
 val snapshotStateList = mutableStateListOf("a", "b")
