@@ -1,5 +1,5 @@
 ---
-title: SnapshotStateList の onString / equals / hashCode の罠
+title: SnapshotStateList の toString / equals / hashCode の罠
 tags:
   - ''
 private: false
@@ -10,17 +10,17 @@ slide: false
 ignorePublish: false
 ---
 
-# SnapshotStateList の `onString` / `equals` / `hashCode` の罠
+# SnapshotStateList の `toString` / `equals` / `hashCode` の罠
 
 ## はじめに
 
-Compose で `List` を扱うとき、`mutableStateListOf` で生成する `SnapshotStateList` を使うことがよくあるでしょう。しかし `SnapshotStateList` の `onString` / `equals` / `hashCode` の挙動は通常の `List` と異なります。
+Compose で `List` を扱うとき、`mutableStateListOf` で生成する `SnapshotStateList` を使うことがよくあるでしょう。しかし `SnapshotStateList` の `toString` / `equals` / `hashCode` の挙動は通常の `List` と異なります。
 
 本記事では、
 
 - `List` の仕様
 - `SnapshotStateList` の設計
-- なぜ `onString` / `equals` / `hashCode` が異なるのか
+- なぜ `toString` / `equals` / `hashCode` が異なるのか
 - `SnapshotStateList` をどう扱えば良いか
 
 を整理します。
@@ -31,7 +31,7 @@ Compose で `List` を扱うとき、`mutableStateListOf` で生成する `Snaps
 
 `List` は要素の汎用的な順序付きコレクション（リスト）を扱うための型で、`interface` で定義されています。そのため、具体的な実装は複数存在し、自分でも実装できます。
 
-リストとして扱うことができるよう、`List` のドキュメントには `onString` / `equals` / `hashCode` の仕様が明確に指示されています。
+リストとして扱うことができるよう、`List` のドキュメントには `toString` / `equals` / `hashCode` の仕様が明確に指示されています。
 
 <details><summary>ドキュメントの原文</summary>
 
