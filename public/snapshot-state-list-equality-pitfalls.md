@@ -13,10 +13,6 @@ slide: false
 ignorePublish: false
 ---
 
-# `SnapshotStateList` の `toString` / `equals` / `hashCode` の罠
-
-tags: Android, Kotlin, Jetpack Compose, List
-
 ## はじめに
 
 Compose で `List` を扱うとき、`mutableStateListOf` で生成される `SnapshotStateList` を利用することは多いでしょう。
