@@ -15,6 +15,8 @@ ignorePublish: false
 
 # `SnapshotStateList` の `toString` / `equals` / `hashCode` の罠
 
+tags: Android, Kotlin, Jetpack Compose, List
+
 ## はじめに
 
 Compose で `List` を扱うとき、`mutableStateListOf` で生成される `SnapshotStateList` を利用することは多いでしょう。
@@ -56,7 +58,7 @@ Kotlin のドキュメントでは、`List` の `toString` / `equals` / `hashCod
 
 つまり、`List` は構造的等価（structural equality）で比較されます。
 
-例えば、生成過程が異なっていても、要素が同じであれば等しいと判定されます：
+生成過程が異なっていても、要素が同じであれば等しいと判定されます：
 
 ```kotlin
 val list1 = mutableListOf("a", "b")
@@ -67,13 +69,11 @@ list1 == list2 // true
 
 ## `SnapshotStateList` とは何か
 
-`SnapshotStateList` は `androidx.compose.runtime.snapshots` に含まれる Compose 用の `MutableList` 実装です。
-
-`SnapshotStateList` は Composable 関数内での使用を想定して、状態監視や Snapshot が可能になるよう実装されています。
+`SnapshotStateList` は `androidx.compose.runtime.snapshots` に含まれる Compose 用の `MutableList` 実装です。Composable 関数内での使用を想定して、状態監視や Snapshot が可能になるよう実装されています。
 
 ### `toString` / `equals` / `hashCode` の違い
 
-`SnapshotStateList` は `equals` と `hashCode` をオーバーライドしていません。そのため、参照ベース（referential equality）で扱われます。また `toString` も通常の `List` とは異なる形式で出力されます。
+`SnapshotStateList` は Composable で状態管理を行うためのコンテナという性質上、インスタンスが同一であるかを重視しています。そのため、`equals` と `hashCode` をオーバーライドせずに、参照ベース（referential equality）で扱われます。また `toString` も通常の `List` とは異なる形式で出力されます。
 
 Kotlin の `==` は左辺の `equals` を呼び出します。そのため、通常の `List` と `SnapshotStateList` を比較すると非対称な結果になります。
 
@@ -93,17 +93,11 @@ list == snapshotStateList       // true
 snapshotStateList == list       // false
 ```
 
-### なぜこのような設計なのか
+### 通常の `List` のように扱うには
 
-`SnapshotStateList` は Composable で状態管理を行うためのコンテナであり、状態の変更を追跡することが主な目的です。つまり、インスタンスの `equals` の結果が変わってしまうと、状態の変更を正しく検知できなくなるなどの問題につながるのかもしれません。
+`SnapshotStateList` を通常の `List` と同様に扱いたい場合は、`toList()` を使用します。
 
-そのため、例外的ではありますが、`SnapshotStateList` は要素の比較を行わない設計になっていると考えられます。
-
-## 通常の `List` のように扱うには
-
-`SnapshotStateList` を通常の `List` と同様に扱いたい場合は、`toList()` を使用します。`toList()` により得られる `List` は immutable なコピーであり、通常の `List` と同様の `toString` / `equals` / `hashCode` を持ちます。
-
-なお `toList()` はスナップショット時点の内容のコピーを返します。その後 `SnapshotStateList` を変更しても、取得済みの `List` には影響しません。
+`toList()` により得られる `List` は immutable なコピーであり、通常の `List` と同様の `toString` / `equals` / `hashCode` を持ちます。その後 `SnapshotStateList` を変更しても、取得済みの `List` には影響しません。
 
 ```kotlin
 val snapshotStateList = mutableStateListOf("a", "b")
