@@ -18,209 +18,127 @@ ignorePublish: false
 
 ## はじめに
 
-Jetpack Navigation 3（以下 Nav3）は柔軟性が高い。一方で、実用段階では複数バックスタックやネスト構造、ナビゲーションバーとの組み合わせにより、状態管理が複雑になりやすい。
+Jetpack Navigation 3（以下 Nav3）は柔軟性が高いです。その一方で、1 つの実装方針が定まっているわけではなく、単一の正解がありません。そのため、実用段階で自分で実装することが多くなったり、複雑になりやすいです。
 
-本記事では、**遷移・状態・描画を分離して管理する設計パターン**を紹介する。公式ドキュメントと Nav3 Recipes を踏まえつつ、多くのケースで基礎になりうる構成を整理する。
+本記事では、Nav3 を扱うときための遷移・状態・描画を分離して管理する設計パターンを紹介します。
 
-## Nav3 の前提
+## Nav3 とは
 
-Nav3 の特徴は明確である。
+Nav3 は Compose のために新しく実装された画面遷移のための仕組みで、宣言的画面遷移と呼べるような設計になっています。
 
-* back stack を開発者が直接操作する
-* `NavDisplay` は `entries` を受け取って描画する
-* 画面遷移は宣言的に表現する
+Nav3 には主に `NavBackStack`、`rememberDecoratedNavEntries`、`NavDisplay` が登場します。
 
-`NavDisplay` のシグネチャは次の通りである。
+### `NavBackStack`
+
+`NavBackStack` は back stack を管理するためのものです。`NavBackStack` は内部的には `Serializable` な `SnapshotStateList<NavKey>` にすぎません。
+
+独自の遷移を設計する場合は、`NavBackStack` を使わずに独自に実装するのも良いでしょう[^no-navkey-navbackstack]。その例を[遷移は自由](#遷移は自由)にて紹介します。
+
+[^no-navkey-navbackstack]: `rememberDecoratedNavEntries` や `NavDisplay` では `NavKey` を参照しません。つまり、`NavBackStack` を使わない場合は `NavKey` も不要になります。
+
+```kotlin
+@Serializable(with = NavBackStackSerializer::class)
+public class NavBackStack<T : NavKey> : MutableList<T>, StateObject, RandomAccess
+```
+
+### `rememberDecoratedNavEntries`
+
+`rememberDecoratedNavEntries` は `backStack: List<T>` を `entryDecorators` と `entryProvider` により `List<NavEntry<T>>` を生成するための関数です。
+
+主要な `entryDecorators` として、`SaveableStateHolderNavEntryDecorator` や  `ViewModelStoreNavEntryDecorator` があります。これにより、画面ごとに `SaveableStateHolder` や `ViewModelStore` を紐付けることができます。
+
+ここで注目すべきは、画面ごとの状態は `NavBackStack` でも `NavDisplay` でもなく、生成される `NavEntry` に属するという点です。これが、後述の設計を可能にします。
+
+```kotlin
+@Composable
+public fun <T : Any> rememberDecoratedNavEntries(
+    backStack: List<T>,
+    entryDecorators: List<@JvmSuppressWildcards NavEntryDecorator<T>> = listOf(),
+    entryProvider: (T) -> NavEntry<T>
+): List<NavEntry<T>>
+```
+
+### `NavDisplay`
+
+`NavDisplay` は `entries: List<NavEntry<T>>` を受け取って描画するための関数です[^navdisplay-backstack]。`NavEntry` をどのように扱うかは `Scene` の実装に依存しますが、基本的には最後尾の `NavEntry` を描画することが多いでしょう。
+
+[^navdisplay-backstack]: `NavDisplay` には `backStack: List<T>` を受け取り内部で `rememberDecoratedNavEntries` を利用する簡易的な API もあります。また `Scene` を扱う API もあります。本記事では状態管理に注目するため、これらは紹介しません。
 
 ```kotlin
 @Composable
 public fun <T : Any> NavDisplay(
     entries: List<NavEntry<T>>,
     modifier: Modifier = Modifier,
+    // ...
     onBack: () -> Unit,
 )
 ```
 
-ここで重要なのは、**`NavDisplay` は状態を生成しない**という点である。描画はあくまで `NavEntry` に依存する。
-
-## rememberDecoratedNavEntries とは何か
-
-Nav3 では `NavEntryDecorator` を用いて `NavEntry` に状態を装飾できる。`rememberDecoratedNavEntries` はそれをまとめて扱うための API である。
-
-たとえば次のようなデコレータを渡せる。
-
-* `SaveableStateHolderNavEntryDecorator`
-* `ViewModelStoreNavEntryDecorator`
-
-これにより、
-
-* 画面ごとの `rememberSaveable`
-* 画面単位の `ViewModel`
-
-を `NavEntry` に紐付けられる。
-
-重要なのは発想である。
-
-> 状態は NavDisplay に属するのではなく、Entry に属する。
-
-この分離が後述の設計を可能にする。
-
 ## 遷移 / 状態 / 描画を分離する
 
-本記事のアプローチは次の三層で構成する。
+本記事のアプローチは次の 3 つに分けて考えることです：
 
-* 遷移は `List<NavKey>` として管理する
-* 状態は `rememberDecoratedNavEntries` で保持する
-* 描画は `NavDisplay` に任せる
+- 遷移は `NavigationState` として管理する
+- 状態は `rememberDecoratedNavEntries` で保持する
+- 描画は `NavDisplay` に任せる
 
-構造は単純である。
-
-```
-All Keys（遷移）
-    ↓
-rememberDecoratedNavEntries（状態）
-    ↓
-Decorated Entries
-    ↓ filter
-Active Entries
-    ↓
-NavDisplay（描画）
-```
-
-`NavDisplay` に渡すのは、状態を保持した `entries` のうち **active な subset** のみである。
-
-## 実装例
-
-最小構成は次のようになる。
+TODO: 以下の実装例を利用して、遷移・状態・描画の分離の例を説明する。
 
 ```kotlin
+class NavigationState(
+    /** 遷移履歴に含まれない非アクティブな back stack */
+    val inactiveBackStack: NavBackStack<NavKey>,
+
+    /** 遷移履歴に含まれるアクティブな back stack */
+    val activeBackStack: NavBackStack<NavKey>,
+)
+
 @Composable
-fun NavHost(
-    allBackStacks: List<List<NavKey>>,
-    activeStackIndex: Int,
-    onBack: () -> Unit,
-) {
-    val allKeys = remember(allBackStacks) {
-        allBackStacks.flatten()
-    }
-
-    val decoratedEntries = rememberDecoratedNavEntries(
-        keys = allKeys,
-        entryDecorators = listOf(
-            SaveableStateHolderNavEntryDecorator(),
-            ViewModelStoreNavEntryDecorator()
-        )
+fun NavigationState.toDecoratedEntries(
+    entryProvider: (NavKey) -> NavEntry<NavKey>,
+): List<NavEntry<NavKey>> {
+    // 全ての back stack を decorated した entries
+    val allEntries = rememberDecoratedNavEntries(
+        // 非アクティブ・アクティブに限らず全ての back stack を渡す
+        backStack = inactiveBackStack + activeBackStack,
+        entryProvider = entryProvider,
     )
 
-    val activeKeys = allBackStacks[activeStackIndex]
-    val activeEntries = decoratedEntries.filter { it.key in activeKeys }
-
-    NavDisplay(
-        entries = activeEntries,
-        onBack = onBack,
-    )
+    // アクティブな back stack に対応する entries を返す
+    return allEntries.takeLast(activeBackStack.size)
 }
 ```
 
-ここでは、
+## 遷移は自由
 
-* 保存する back stack の一覧を持つ
-* それらをまとめて状態化する
-* 表示は active な stack のみ行う
+前述の実装例を見て分かる通り、遷移の設計の自由度は非常に高いです。
 
-という流れになる。
+`rememberDecoratedNavEntries` にて非アクティブを含む全ての back stack に対して状態保持する。そして、`NavDisplay` で扱うためのアクティブな entries をフィルタ・ソートして返す。これができれば、遷移の内部構造は自由であると言えます。
 
-## 遷移履歴上には存在させないが状態を保持したい場合
-
-ナビゲーションバーを例にする。
-
-タブ A → タブ B → タブ A と切り替えたとき、
-
-* A のスクロール位置
-* A のフォーム入力状態
-
-を保持したい。
-
-Nav2 では `popUpTo + saveState` によってこれを実現していた。しかし本質は API ではなく、**「表示しないが状態は保持したい」**という要求である。
-
-本記事の構成では、
-
-* A のエントリは `All Keys` に残す
-* ただし `NavDisplay` には渡さない
-
-という形で自然に実現できる。
-
-状態と描画を分離しているため、遷移履歴と表示履歴を一致させる必要はない。
-
-## 遷移の仕組みは自由である
-
-重要なのは次の二点である。
-
-* 保存する back stack の一覧を定義できること
-* そこから active な subset を取り出せること
-
-これができれば、遷移の内部構造は自由である。
-
-単純な `List<NavKey>` でもよいし、より構造化されたモデルでもよい。
-
-たとえば次のようなノード構造も定義できる。
+例えば、以下のような `NavNode` を定義してそこから back stack を得ることができれば、ナビゲーションバーやタブのような複雑な遷移構造にも対応した汎用的な画面遷移を設計できます：
 
 ```kotlin
-sealed interface NavNode<T : NavKey> {
-    val key: T
+sealed interface NavNode {
+    class Leaf(
+        val key: NavKey,
+    ) : NavNode
 
-    class Leaf<T : NavKey>(
-        override val key: T,
-    ) : NavNode<T>
+    class Stack(
+        val children: List<NavNode>,
+    ) : NavNode
 
-    class Stack<T : NavKey>(
-        override val key: T,
-        children: List<NavNode<T>>,
-    ) : NavNode<T>
-
-    class Select<T : NavKey>(
-        override val key: T,
-        selected: T,
-        val children: Set<NavNode<T>>,
-    ) : NavNode<T>
+    class Select(
+        var selected: NavNode,
+        val children: Set<NavNode>,
+    ) : NavNode
 }
 ```
-
-最終的に `NavEntry` の集合へ flatten でき、active な subset を抽出できるなら、この設計は成立する。
-
-deep link や navigateUp も、遷移モデル側で解決すればよい。状態管理と描画には影響しない。
 
 ## まとめ
 
-Nav3 に正解はない。しかし、
-
-* 遷移
-* 状態
-* 描画
-
-を明確に分離することで、多くの複雑なケースに対応できる。
-
-`rememberDecoratedNavEntries` を中心に据え、`NavDisplay` へは active な `entries` のみを渡す。この構成は実用的かつ拡張性が高い。
-
-状態を Entry に属させる設計は、Nav3 を使いこなす上で重要な視点である。
+- TODO: 箇条書きでまとめる
 
 ## 参考文献
 
-* Android Developers: Navigation 3
-  [https://developer.android.com/guide/navigation/navigation-3](https://developer.android.com/guide/navigation/navigation-3)
-
-* Android Developers: NavEntryDecorator
-  [https://developer.android.com/guide/navigation/navigation-3/naventrydecorators](https://developer.android.com/guide/navigation/navigation-3/naventrydecorators)
-
-* Android nav3-recipes
-  [https://github.com/android/nav3-recipes](https://github.com/android/nav3-recipes)
-
-## 脚注
-
-[^1]: `NavDisplay` には `backStack: List<T>` を直接受け取る簡易的な API も存在する。また `Scene` を扱う拡張版もある。本記事では状態管理を自前で行うため、それらは扱わない。
-
-[^2]: `NavKey` の identity 設計は重要である。同一キーをどの粒度で一意とみなすかにより、状態の再利用単位が決まる。
-
-[^3]: `allBackStacks.flatten()` のような単純実装は説明のためのものであり、実際には差分更新やキー安定性を考慮する必要がある。
-
-[^4]: 状態が不要になったキーは `All Keys` から除去すればよい。これにより対応する `NavEntry` の状態も破棄される。
+- [Navigation 3 | App architecture | Android Developers](https://developer.android.com/guide/navigation/navigation-3)
+- [android/nav3-recipes: Implement common use cases with Jetpack Navigation 3](https://github.com/android/nav3-recipes)
