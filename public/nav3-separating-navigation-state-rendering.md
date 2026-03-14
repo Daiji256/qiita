@@ -134,3 +134,9 @@ sealed interface NavNode {
 
 - [Navigation 3 | App architecture | Android Developers](https://developer.android.com/guide/navigation/navigation-3)
 - [android/nav3-recipes: Implement common use cases with Jetpack Navigation 3](https://github.com/android/nav3-recipes)
+
+---
+
+## お詫び
+
+本記事で紹介したアプローチは [`android/nav3-recipes`](https://github.com/android/nav3-recipes) の [#242](https://github.com/android/nav3-recipes/pull/242) にて却下されました。これは、アプローチ自体に問題があるといより、レシピとして適切ではないと判断されたと解釈しています。そのため、本記事を通して紹介することを選びました。
