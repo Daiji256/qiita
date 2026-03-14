@@ -49,7 +49,7 @@ public class NavBackStack<T : NavKey> : MutableList<T>, StateObject, RandomAcces
 
 代表的な `entryDecorators` としては、`SaveableStateHolderNavEntryDecorator` や `ViewModelStoreNavEntryDecorator` があります。これらは内部で各画面に `SaveableStateHolder` や `ViewModelStore` を関連付けます。
 
-ここで重要なのは、画面の状態（たとえば ViewModel や SavedState）の寿命は、この関数に渡されるリストに含まれている期間と一致するという点です。リストからキーが削除されると、対応する状態も破棄されます。
+ここで重要なのは、画面の状態（たとえば `ViewModel` や `SavedState`）の寿命は、この関数に渡されるリストに含まれている期間と一致するという点です。リストからキーが削除されると、対応する状態も破棄されます。
 
 ```kotlin
 @Composable
@@ -84,7 +84,7 @@ public fun <T : Any> NavDisplay(
 
 例えば、以下のように遷移状態を `NavigationState` という独自のモデルで管理することを考えましょう。このように保持対象のバックスタックと描画対象のバックスタックを分けて扱うことで、非アクティブなタブの状態は保持しつつ、現在表示中のタブだけを描画できます。タブ切り替えやナビゲーションバーを伴う構成でも、この分離を意識すると設計しやすくなります。
 
-このようにすると、`NavDisplay` に渡す `entries` は `activeBackStack` の内容のみになりますが、`rememberDecoratedNavEntries` には `inactiveBackStack` も渡されているため、裏にあるタブの状態（ViewModel など）は破棄されずに保持されます。
+このようにすると、`NavDisplay` に渡す `entries` は `activeBackStack` の内容のみになりますが、`rememberDecoratedNavEntries` には `inactiveBackStack` も渡されているため、裏にあるタブの状態（`ViewModel` など）は破棄されずに保持されます。
 
 ```kotlin
 interface NavigationState {
