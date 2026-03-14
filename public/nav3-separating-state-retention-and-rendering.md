@@ -18,9 +18,9 @@ ignorePublish: false
 
 Jetpack Navigation 3（以下 Nav3）は柔軟性が高い一方で、実装方針が 1 つに定まっているわけではありません。そのため、実運用ではアプリの要件に応じて設計する場面が多く、実装が複雑になりやすいです。
 
-本記事では、Nav3 において状態の保持と描画を分けて考えると、なぜ設計しやすくなるのかを紹介します。
+本記事では、Nav3 において状態の保持と描画を分けて考えると、なぜ設計しやすくなるのかを説明します。
 
-なお、本記事で紹介するアプローチは [`android/nav3-recipes`](https://github.com/android/nav3-recipes) の [#242](https://github.com/android/nav3-recipes/pull/242) にて、公式のレシピとしては採用されませんでした。これはアプローチ自体に問題があるのではなく、レシピとして適切ではなかったと考えています。しかし、Nav3 の設計の自由度や仕組みを理解する上では有用な視点であるため、紹介します。
+なお、本記事で紹介するアプローチは [`android/nav3-recipes`](https://github.com/android/nav3-recipes) の [#242](https://github.com/android/nav3-recipes/pull/242) にて、公式のレシピとしては採用されませんでした。これはアプローチ自体に問題があるのではなく、レシピとして適切ではなかったためだと考えています。しかし、Nav3 の設計の自由度や仕組みを理解する上では有用な視点であるため、本記事で取り上げます。
 
 ## Nav3 とは
 
@@ -47,9 +47,9 @@ public class NavBackStack<T : NavKey> : MutableList<T>, StateObject, RandomAcces
 
 `rememberDecoratedNavEntries` は `backStack: List<T>` をもとに `entryDecorators` と `entryProvider` を適用し、`List<NavEntry<T>>` を生成する関数です。
 
-代表的な `entryDecorators` としては、`SaveableStateHolderNavEntryDecorator` や `ViewModelStoreNavEntryDecorator` があります。これらは内部で各画面に `SaveableStateHolder` や `ViewModelStore` をひもづけます。
+代表的な `entryDecorators` としては、`SaveableStateHolderNavEntryDecorator` や `ViewModelStoreNavEntryDecorator` があります。これらは内部で各画面に `SaveableStateHolder` や `ViewModelStore` を関連付けます。
 
-ここで重要なのは、画面の状態（ViewModel や SavedState）の寿命は、この関数に渡されるリストに含まれている期間と一致するという点です。リストからキーが削除されると、対応する状態も破棄されます。
+ここで重要なのは、画面の状態（たとえば ViewModel や SavedState）の寿命は、この関数に渡されるリストに含まれている期間と一致するという点です。リストからキーが削除されると、対応する状態も破棄されます。
 
 ```kotlin
 @Composable
@@ -80,11 +80,11 @@ public fun <T : Any> NavDisplay(
 
 ## 保持と描画を分けて考える
 
-実際のアプリ開発の場面では、1 方向の単純な遷移だけでなく、タブやナビゲーションバーによる遷移も扱うことが多いです。これらでは「画面としては表示されていないが、タブの状態は保持しておきたい」という要件が発生します。
+実際のアプリ開発の場面では、1 方向の単純な遷移だけでなく、タブやナビゲーションバーによる遷移も扱うことが多いです。このような UI では「画面としては表示されていないが、タブの状態は保持しておきたい」という要件が発生します。
 
 例えば、以下のように遷移状態を `NavigationState` という独自のモデルで管理することを考えましょう。このように保持対象のバックスタックと描画対象のバックスタックを分けて扱うことで、非アクティブなタブの状態は保持しつつ、現在表示中のタブだけを描画できます。タブ切り替えやナビゲーションバーを伴う構成でも、この分離を意識すると設計しやすくなります。
 
-これより、`NavDisplay` に渡す `entries` は `activeBackStack` の内容のみになりますが、`rememberDecoratedNavEntries` には `inactiveBackStack` も渡されているため、裏にあるタブの状態（ViewModel など）は破棄されずに保持されます。
+このようにすると、`NavDisplay` に渡す `entries` は `activeBackStack` の内容のみになりますが、`rememberDecoratedNavEntries` には `inactiveBackStack` も渡されているため、裏にあるタブの状態（ViewModel など）は破棄されずに保持されます。
 
 ```kotlin
 interface NavigationState {
