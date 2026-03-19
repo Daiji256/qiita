@@ -4,7 +4,7 @@ tags:
   - Kotlin
   - KotlinContracts
 private: false
-updated_at: '2026-01-14T21:31:48+09:00'
+updated_at: '2026-03-19T12:24:45+09:00'
 id: e308b9e87fe69490d47d
 organization_url_name: null
 slide: false

@@ -7,7 +7,7 @@ tags:
   - coroutine
   - Stateflow
 private: false
-updated_at: '2025-09-09T21:46:47+09:00'
+updated_at: '2026-03-19T12:24:45+09:00'
 id: eb1a32c4dcaa087769f3
 organization_url_name: null
 slide: false
