@@ -1,5 +1,5 @@
 ---
-title: Navigation Compose における ViewModel での引数の受け取り方 4 選と比較
+title: Navigation ComposeにおけるViewModelでの引数の受け取り方4選と比較
 tags:
   - Android
   - Kotlin
@@ -16,13 +16,13 @@ ignorePublish: false
 
 ## はじめに
 
-Navigation Compose 2.8.0 以降では、シリアル化可能なクラスを用いて、型安全に画面間でデータを渡せるようになりました。
+Navigation Compose 2.8.0以降では、シリアル化可能なクラスを用いて、型安全に画面間でデータを渡せるようになりました。
 
-本記事では、「画面遷移時の引数を `ViewModel` でどの受け取るか」に焦点を当て、4 つの方法を紹介し比較します。すべて Hilt + Navigation Compose 2.8.0 以降の環境を想定していますが、他の DI フレームワークやバージョンでも応用可能です。
+本記事では、「画面遷移時の引数を `ViewModel` でどの受け取るか」に焦点を当て、4つの方法を紹介し比較します。すべてHilt + Navigation Compose 2.8.0以降の環境を想定していますが、他のDIフレームワークやバージョンでも応用可能です。
 
 ## 引数の渡し方
 
-Navigation Compose では、引数を含むシリアル化可能なクラスを `composable` のルートとして利用できます：
+Navigation Composeでは、引数を含むシリアル化可能なクラスを `composable` のルートとして利用できます：
 
 ```kotlin
 @Serializable
@@ -44,7 +44,7 @@ fun NavController.navigateToSample(arg: String) =
 
 遷移先では、`NavBackStackEntry` などを通じて `route` を取得します。その受け取り方と `ViewModel` での扱い方を紹介します。
 
-### 1. Composable から `ViewModel` に渡す（関数呼び出し）
+### 1. Composableから `ViewModel` に渡す（関数呼び出し）
 
 `NavGraphBuilder.composable()` の `content` ラムダで受け取る `NavBackStackEntry` から、`toRoute()` により `route` を取得します。そして `ViewModel` の関数を呼び出すことで `route` を `ViewModel` に渡します。
 
@@ -96,21 +96,21 @@ class SampleViewModel @Inject constructor() : ViewModel() {
 }
 ```
 
-### 2. Assisted Injection を使って `ViewModel` 初期化時に渡す
+### 2. Assisted Injectionを使って `ViewModel` 初期化時に渡す
 
-`ViewModel` の初期化タイミングで引数を渡したい場合は、Dagger の Assisted Injection（部分的な DI を可能にする仕組み）が有効です。
+`ViewModel` の初期化タイミングで引数を渡したい場合は、DaggerのAssisted Injection（部分的なDIを可能にする仕組み）が有効です。
 
-Assisted Injection を利用することで、一部の依存関係を Dagger により解決しつつ、別の引数を直接渡すことができます。これにより `ViewModel` の初期化時に `route` が利用できます。
+Assisted Injectionを利用することで、一部の依存関係をDaggerにより解決しつつ、別の引数を直接渡すことができます。これにより `ViewModel` の初期化時に `route` が利用できます。
 
 #### ✅ メリット
 
 - 引数を `ViewModel` 初期化に利用できる
-- テスト時に DI できる
+- テスト時にDIできる
 
 #### ⚠️ デメリット
 
-- `Factory` インターフェースや DI 設定が少し煩雑
-- Assisted Injection の理解が必要
+- `Factory` インターフェースやDI設定が少し煩雑
+- Assisted Injectionの理解が必要
 
 #### 実装例
 
@@ -143,9 +143,9 @@ fun SampleScreen(
 
 ### 3. `ViewModel` で `SavedStateHandle` から受け取る
 
-`SavedStateHandle.toRoute()` により `route` を取得できます。これにより、Composable を介さずに ViewModel 側で直接引数を受け取ることができます。
+`SavedStateHandle.toRoute()` により `route` を取得できます。これにより、Composableを介さずにViewModel側で直接引数を受け取ることができます。
 
-`toRoute()` は内部で `android.os.Bundle` を利用しているため、ユニットテストでは注意が必要です。`android.os.Bundle` は Android フレームワークのクラスであり、JVM 単体ではテストできません。シミュレートするには Robolectric が必要になります。また、`savedStateHandle["arg"] = "value"` のように引数を指定する必要があります。
+`toRoute()` は内部で `android.os.Bundle` を利用しているため、ユニットテストでは注意が必要です。`android.os.Bundle` はAndroidフレームワークのクラスであり、JVM単体ではテストできません。シミュレートするにはRobolectricが必要になります。また、`savedStateHandle["arg"] = "value"` のように引数を指定する必要があります。
 
 #### ✅ メリット
 
@@ -154,7 +154,7 @@ fun SampleScreen(
 
 #### ⚠️ デメリット
 
-- `android.os.Bundle` に依存しておりユニットテストでは Robolectric が必要
+- `android.os.Bundle` に依存しておりユニットテストではRobolectricが必要
 - テストでは `savedStateHandle["arg"] = "value"` のように準備する必要がある
 
 #### 実装例
@@ -184,21 +184,21 @@ class SampleViewModelTest {
 }
 ```
 
-### 4. `SavedStateHandle.toRoute()` を外で呼び、Hilt で注入
+### 4. `SavedStateHandle.toRoute()` を外で呼び、Hiltで注入
 
 テストしやすさを重視する場合、`SavedStateHandle.toRoute()` を切り出して、`ViewModel` には `route` を直接注入する必要があります。
 
-具体的には、`SavedStateHandle.toRoute()` を実行する Hilt Module を定義します。これにより、`ViewModel` は `route` を直接インジェクトできるため、`ViewModel` が `android.os.Bundle` に依存せず、ユニットテストをより簡単に記述できます。
+具体的には、`SavedStateHandle.toRoute()` を実行するHilt Moduleを定義します。これにより、`ViewModel` は `route` を直接インジェクトできるため、`ViewModel` が `android.os.Bundle` に依存せず、ユニットテストをより簡単に記述できます。
 
 #### ✅ メリット
 
-- `ViewModel` が Android フレームワークに依存しないため、ユニットテストが容易
-- DI による構成がシンプルで、再利用性が高い
+- `ViewModel` がAndroidフレームワークに依存しないため、ユニットテストが容易
+- DIによる構成がシンプルで、再利用性が高い
 
 #### ⚠️ デメリット
 
-- Hilt Module の定義が必要
-- Hilt に慣れていないとやや冗長に感じる
+- Hilt Moduleの定義が必要
+- Hiltに慣れていないとやや冗長に感じる
 
 #### 実装例
 
@@ -223,20 +223,20 @@ class SampleViewModel @Inject constructor(
 
 ## まとめ
 
-以下は `ViewModel` での引数受け取りにおける 4 手法の比較表です。
+以下は `ViewModel` での引数受け取りにおける4手法の比較表です。
 
 | 方法               | 初期化タイミング | テストのしやすさ      | 実装の複雑さ          |
 | ------------------ | ---------------- | --------------------- | --------------------- |
 | 関数呼び出し       | 遅延初期化       | ✅ 初期化を制御できる | 🟡 関数呼び出しが必要 |
-| Assisted Injection | 即時初期化       | ✅ DI でテスト容易    | 🟡 Factory が必要     |
-| `SavedStateHandle` | 即時初期化       | ⚠️ Bundle に依存      | 🟢 最小の実装量       |
-| Hilt で provides   | 即時初期化       | ✅ DI でテスト容易    | 🟡 Module が必要      |
+| Assisted Injection | 即時初期化       | ✅ DIでテスト容易     | 🟡 Factoryが必要      |
+| `SavedStateHandle` | 即時初期化       | ⚠️ Bundleに依存       | 🟢 最小の実装量       |
+| Hiltでprovides     | 即時初期化       | ✅ DIでテスト容易     | 🟡 Moduleが必要       |
 
 ## おわりに
 
 本記事で紹介した方法は一例であり、特定のベストプラクティスがあるわけではありません。プロジェクトや開発チームに合わせて選択すべきです。今後の変更にも備え、柔軟な選択が求められます。
 
-本記事の方法は現行の Navigation 2.8.0 に基づいていますが、Navigation 3 のリリースが予定されています。Navigation 3 は Composable を主軸に置いており、画面遷移についてが大きな変更があります。本記事で紹介した中では、特に序盤の方法が今後の標準的なアプローチになる可能性が高いと予想しています。
+本記事の方法は現行のNavigation 2.8.0に基づいていますが、Navigation 3のリリースが予定されています。Navigation 3はComposableを主軸に置いており、画面遷移についてが大きな変更があります。本記事で紹介した中では、特に序盤の方法が今後の標準的なアプローチになる可能性が高いと予想しています。
 
 ## 参考文献
 

@@ -1,5 +1,5 @@
 ---
-title: SnapshotStateList の toString / equals / hashCode の罠
+title: SnapshotStateListのtoString / equals / hashCodeの罠
 tags:
   - Android
   - Kotlin
@@ -15,13 +15,13 @@ ignorePublish: false
 
 ## はじめに
 
-Compose で `List` を扱うとき、`mutableStateListOf` で生成される `SnapshotStateList` を利用することは多いでしょう。
+Composeで `List` を扱うとき、`mutableStateListOf` で生成される `SnapshotStateList` を利用することは多いでしょう。
 
 しかし `SnapshotStateList` の `toString` / `equals` / `hashCode` の挙動は、一般的な `List` とは異なります。この違いを理解していないと、比較処理などで意図しない挙動に遭遇します。
 
 本記事では、次の観点について解説します：
 
-- Kotlin の `List` について
+- Kotlinの `List` について
 - `SnapshotStateList` の性質
 - なぜ `toString` / `equals` / `hashCode` で差が出るのか
 - `SnapshotStateList` の扱い方
@@ -32,7 +32,7 @@ Compose で `List` を扱うとき、`mutableStateListOf` で生成される `Sn
 
 `List` は要素の順序を保持するコレクション型であり、`interface` として定義されています。そのため、具体的な実装は複数存在し、独自実装も可能です。
 
-Kotlin のドキュメントでは、`List` の `toString` / `equals` / `hashCode` について明確な記述があります。
+Kotlinのドキュメントでは、`List` の `toString` / `equals` / `hashCode` について明確な記述があります。
 
 要点は次の通りです：
 
@@ -65,15 +65,15 @@ list1 == list2 // true
 
 ## `SnapshotStateList` とは何か
 
-`SnapshotStateList` は `androidx.compose.runtime.snapshots` に含まれる Compose の状態管理向け `MutableList` 実装です。
+`SnapshotStateList` は `androidx.compose.runtime.snapshots` に含まれるComposeの状態管理向け `MutableList` 実装です。
 
-この型は Snapshot システムと連携するため、一般的な `List` 実装と違う挙動を持ちます。
+この型はSnapshotシステムと連携するため、一般的な `List` 実装と違う挙動を持ちます。
 
 ### `toString` / `equals` / `hashCode` の違い
 
 `SnapshotStateList` では、一般的な `List` のような要素ベースの `toString` / `equals` / `hashCode`を持ちません。代わりに、インスタンスの参照をベースにした実装になっています。
 
-また、Kotlin の `==` 演算子は、左辺の `equals` メソッドを呼び出すため、`SnapshotStateList` と一般的な `List` を比較すると、一方は要素ベースで、もう一方は参照ベースで比較されることになります。
+また、Kotlinの `==` 演算子は、左辺の `equals` メソッドを呼び出すため、`SnapshotStateList` と一般的な `List` を比較すると、一方は要素ベースで、もう一方は参照ベースで比較されることになります。
 
 ```kotlin
 val list = listOf("a", "b")

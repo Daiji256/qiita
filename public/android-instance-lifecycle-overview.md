@@ -1,5 +1,5 @@
 ---
-title: Android アプリにおけるインスタンスの生存期間とスコープ
+title: Androidアプリにおけるインスタンスの生存期間とスコープ
 tags:
   - Android
   - lifecycle
@@ -12,13 +12,13 @@ slide: false
 ignorePublish: false
 ---
 
-本記事では、Android アプリ開発において登場する各種オブジェクト（`Application`、`Android`、`ViewModel` など）のインスタンス生存期間とスコープについて整理する。各オブジェクトがどのタイミング・スコープで生成され、破棄されるのかを理解することで、状態管理やリソース管理の最適化、メモリリークの防止などにつながる。
+本記事では、Androidアプリ開発において登場する各種オブジェクト（`Application`、`Android`、`ViewModel` など）のインスタンス生存期間とスコープについて整理する。各オブジェクトがどのタイミング・スコープで生成され、破棄されるのかを理解することで、状態管理やリソース管理の最適化、メモリリークの防止などにつながる。
 
 なお、記述内容は正確を期すよう努めているものの、誤りが含まれる可能性がある。もしそのような点にお気づきの場合は、指摘していただきたい。
 
 ## 前提
 
-本記事では、`androidx.navigation` と Dagger Hilt の利用を想定して説明を進める。なお、スコープやインスタンスの生存期間の説明上、Dagger Hilt の文脈が登場するが、Dagger Hilt の依存性注入の解説は行わない。
+本記事では、`androidx.navigation` とDagger Hiltの利用を想定して説明を進める。なお、スコープやインスタンスの生存期間の説明上、Dagger Hiltの文脈が登場するが、Dagger Hiltの依存性注入の解説は行わない。
 
 ### 取り扱うこと
 
@@ -38,15 +38,15 @@ ignorePublish: false
 - `Application`：  
   `android.app.Application` のこと。
 - `ActivityRetained`（`@ActivityRetainedScoped`）：  
-  構成変更（画面回転など）の後も維持されるスコープのこと。Dagger Hilt におけるスコープの一種であり、実際のオブジェクトとして明示的に存在するのではなく、DI コンテナとして管理される。
+  構成変更（画面回転など）の後も維持されるスコープのこと。Dagger Hiltにおけるスコープの一種であり、実際のオブジェクトとして明示的に存在するのではなく、DIコンテナとして管理される。
 - `Activity`：  
   `android.app.Activity` のこと。
-- `Screen`：`Activity` 下の遷移の管理がされている画面のこと。`Fragment` や Compose の `NavHost` の `composable` に当てはめてほしい。
+- `Screen`：`Activity` 下の遷移の管理がされている画面のこと。`Fragment` やComposeの `NavHost` の `composable` に当てはめてほしい。
 - `ViewModel`：  
   `androidx.lifecycle.ViewModel` のこと。
 - `Service`：  
   `android.app.Service` のこと。`Activity`（UI）とは独立してバックグランド処理に専念する。
-- Saved State の仕組み：  
+- Saved Stateの仕組み：  
   `onSaveInstanceState` や `SavedStateHandle` などにより、一時的に状態を保存・復元する仕組み。
 
 ### オブジェクト間の親子関係
@@ -59,35 +59,35 @@ ignorePublish: false
 
 ### `Application`
 
-`Application` はプロセス起動の起点となるオブジェクトである。`Application` の起動と破棄は OS が管理するため、通常はアプリ内から直接制御することない。多くの場合、`Activity` や `Service` の起動要求に伴って `Application` が起動される。そして、`Activity` と `Service` が存在しないときに OS のリソース管理の判断により `Application` が破棄される（プロセスが終了する）。
+`Application` はプロセス起動の起点となるオブジェクトである。`Application` の起動と破棄はOSが管理するため、通常はアプリ内から直接制御することない。多くの場合、`Activity` や `Service` の起動要求に伴って `Application` が起動される。そして、`Activity` と `Service` が存在しないときにOSのリソース管理の判断により `Application` が破棄される（プロセスが終了する）。
 
-また、設定アプリなどから、通知や位置情報などのパーミッションを OFF に切り替えたときにも `Application` は破棄される。
+また、設定アプリなどから、通知や位置情報などのパーミッションをOFFに切り替えたときにも `Application` は破棄される。
 
 `Activity` よりも生存期間が長いため、`Activity` の破棄・再生成後にも値を維持できる。
 
-![Application が持つする object1 は Activity が再生成された場合にも維持される。Activity が持っていた object2 は失う。](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/699841/92ba01f9-338b-487a-9a3c-b3f710556962.jpeg)
+![Applicationが持つするobject1はActivityが再生成された場合にも維持される。Activityが持っていたobject2は失う。](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/699841/92ba01f9-338b-487a-9a3c-b3f710556962.jpeg)
 
 ### `ActivityRetained`（`@ActivityRetainedScoped`）
 
-`ActivityRetained` は、画面回転などの構成変更が発生した際に Activity が再生成されてもそのまま保持されるスコープである。Dagger Hilt におけるスコープの一種であり、実際のオブジェクトとして明示的に存在するのではなく、DI コンテナとして管理される。
+`ActivityRetained` は、画面回転などの構成変更が発生した際にActivityが再生成されてもそのまま保持されるスコープである。Dagger Hiltにおけるスコープの一種であり、実際のオブジェクトとして明示的に存在するのではなく、DIコンテナとして管理される。
 
-ただし、明示的に `Activity` を終了したとき（例：`activity.finish()`）や OS のリソース管理によって `Activity` が破棄されるときには、`ActivityRetained` によるリソースも破棄される。
+ただし、明示的に `Activity` を終了したとき（例：`activity.finish()`）やOSのリソース管理によって `Activity` が破棄されるときには、`ActivityRetained` によるリソースも破棄される。
 
 主に、`ViewModel` の管理や、構成変更時に状態を維持するために活用される。
 
-![構成変更により、Activity は再生成されるが、ActivityRetained と ViewModel は維持される。](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/699841/e8c39fb1-3226-4b18-870b-fb6f70d3b1dd.jpeg)
+![構成変更により、Activityは再生成されるが、ActivityRetainedとViewModelは維持される。](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/699841/e8c39fb1-3226-4b18-870b-fb6f70d3b1dd.jpeg)
 
-![明示的な、Activity の破棄では、ActivityRetained と ViewModel も破棄される。](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/699841/f6182649-4da6-47f0-8d2f-961d8d9dadea.jpeg)
+![明示的な、Activityの破棄では、ActivityRetainedとViewModelも破棄される。](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/699841/f6182649-4da6-47f0-8d2f-961d8d9dadea.jpeg)
 
 ### `Activity`
 
-`Activity` は画面を扱うオブジェクトである。画面回転などの構成変更や、バックグラウンド時の OS の判断などで破棄される。
+`Activity` は画面を扱うオブジェクトである。画面回転などの構成変更や、バックグラウンド時のOSの判断などで破棄される。
 
-`Activity` の破棄により UI に関する状態は失われるため、状態の保持・復元のためには、`Application`、`ViewModel`、Saved State などを活用する必要がある。
+`Activity` の破棄によりUIに関する状態は失われるため、状態の保持・復元のためには、`Application`、`ViewModel`、Saved Stateなどを活用する必要がある。
 
 ### `Screen`
 
-`Screen` は `Activity` 下の遷移の管理がされている画面のこと。`Fragment` や Compose の `NavHost` の `composable` に当てはめてほしい。画面遷移に連動して `ViewModel` の生存期間が管理される。
+`Screen` は `Activity` 下の遷移の管理がされている画面のこと。`Fragment` やComposeの `NavHost` の `composable` に当てはめてほしい。画面遷移に連動して `ViewModel` の生存期間が管理される。
 
 ### `ViewModel`
 
@@ -97,21 +97,21 @@ ignorePublish: false
 
 注意すべきは、`Screen` が画面遷移のバックスタックにあり、表に出ていない場合にも `ViewModel` はアクティブである。
 
-![Screen1 → Screen2 に遷移した状態では、Screen1 は非アクティブであるが、ViewModel1 と ViewModel2 がアクティブである。Screen2 を pop すると、Screen1 がアクティブになり、ViewModel2 は破棄される。](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/699841/392b258f-d23c-4541-bfde-b9f809142bb0.jpeg)
+![Screen1 → Screen2に遷移した状態では、Screen1は非アクティブであるが、ViewModel1とViewModel2がアクティブである。Screen2をpopすると、Screen1がアクティブになり、ViewModel2は破棄される。](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/699841/392b258f-d23c-4541-bfde-b9f809142bb0.jpeg)
 
 ### `Service`
 
-`Service` はバックグランドでの処理に用いら、UI とは独立して動作する。そのため `Application` は参照できるが、`Activity` や `ViewModel` は参照できない。
+`Service` はバックグランドでの処理に用いら、UIとは独立して動作する。そのため `Application` は参照できるが、`Activity` や `ViewModel` は参照できない。
 
-### Saved State の仕組み[^system-server]
+### Saved Stateの仕組み[^system-server]
 
-[^system-server]: Saved State の仕組みは、保存するための領域が `Application` の外側にあるというだけの認識で説明を進める。`system_server` や `Bundle` などの技術的な解決策や仕組みの説明は割愛する。
+[^system-server]: Saved Stateの仕組みは、保存するための領域が `Application` の外側にあるというだけの認識で説明を進める。`system_server` や `Bundle` などの技術的な解決策や仕組みの説明は割愛する。
 
 `onSaveInstanceState` や `SavedStateHandle` などにより、一時的に状態を保存・復元する仕組みのこと。保存先の領域は `Application` のスコープ外にある。
 
 `Activity` や `ViewModel` の状態を保存・復元されるために利用される。また、画面遷移などの複数の `Screen` 等をまたいだあたいのやり取りにも利用される。
 
-![Activity の再生成後にも Saved State は保持される。](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/699841/5fc8b617-c589-4a14-9998-305e2da48203.jpeg)
+![Activityの再生成後にもSaved Stateは保持される。](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/699841/5fc8b617-c589-4a14-9998-305e2da48203.jpeg)
 
 ## 注意すべきこと
 
@@ -119,11 +119,11 @@ ignorePublish: false
 
 ### `activity.finish()` では `Application` は破棄されない
 
-例えば、アプリの退会時に状態を初期化し、アプリを終了したいとする。このとき `activity.finish()` が最も単純な方法に思えるであろう。しかし、これでは `Activity` が破棄されるだけで、`Application` は破棄されるとは限らない。`Application` のスコープ（Dagger Hilt での `Singleton`）で保持している状態は継続して生存する。
+例えば、アプリの退会時に状態を初期化し、アプリを終了したいとする。このとき `activity.finish()` が最も単純な方法に思えるであろう。しかし、これでは `Activity` が破棄されるだけで、`Application` は破棄されるとは限らない。`Application` のスコープ（Dagger Hiltでの `Singleton`）で保持している状態は継続して生存する。
 
 `activity.finish()` では `Activity` を終了させることはできるが、`Application` を終了させることができないことに注意する必要がある。
 
-![Activity の終了により、Activity が保持する object2 は破棄されるが、Application が保持する object1 は破棄されない。](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/699841/9cd360a9-3428-4d20-bcf6-e819354d208b.jpeg)
+![Activityの終了により、Activityが保持するobject2は破棄されるが、Applicationが保持するobject1 は破棄されない。](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/699841/9cd360a9-3428-4d20-bcf6-e819354d208b.jpeg)
 
 ### `ViewModel` と `Activity` の生存期間の違いによるメモリリーク
 
@@ -131,21 +131,21 @@ ignorePublish: false
 
 `Activity` だけでなく、`Fragment` や `Composable` においても同様にメモリリークが発生する。そのため、`ViewModel` 内では `ApplicationContext` のみを参照するなどの対策が必要である。
 
-![ViewModel が Activity から context を受け取る。Activity の再生後も context を保持し続けるため、メモリが解放されない。](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/699841/f6c18d66-feb9-4690-b230-5d941b8c7a41.jpeg)
+![ViewModelがActivityからcontextを受け取る。Activityの再生後もcontextを保持し続けるため、メモリが解放されない。](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/699841/f6c18d66-feb9-4690-b230-5d941b8c7a41.jpeg)
 
-### Saved State と `Application` の不整合
+### Saved Stateと `Application` の不整合
 
-例えば、入力画面でユーザーが値を入力し、その値を `Application` の領域に保存した場合を考える。入力後に確認画面に遷移し、その画面で値を参照する。このとき設定アプリを開き何らかのパーミッションを OFF にすると、`Application` が破棄され、入力した値も破棄される。アプリを再度開くと、Saved State により確認画面を開いた状態に復元されるが、`Application` の値は復元されない。そのため、確認画面にいるが、入力値が存在しないという状態が生まれてしまう。
+例えば、入力画面でユーザーが値を入力し、その値を `Application` の領域に保存した場合を考える。入力後に確認画面に遷移し、その画面で値を参照する。このとき設定アプリを開き何らかのパーミッションをOFFにすると、`Application` が破棄され、入力した値も破棄される。アプリを再度開くと、Saved Stateにより確認画面を開いた状態に復元されるが、`Application` の値は復元されない。そのため、確認画面にいるが、入力値が存在しないという状態が生まれてしまう。
 
-`Application` より Saved State の生存期間が長いことにより、アプリ全体の状態に不整合が起きる危険性がある。それぞれに保存する値に注意する必要がある。
+`Application` よりSaved Stateの生存期間が長いことにより、アプリ全体の状態に不整合が起きる危険性がある。それぞれに保存する値に注意する必要がある。
 
-![パーミッションを OFF にすることで、Application の値が破棄されるが、Saved State は破棄されない。両方が保持されていることを前提としている場合、不整合が生じる。](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/699841/b3310ec3-f9f9-4de8-8c57-1156c68d5383.jpeg)
+![パーミッションをOFFにすることで、Applicationの値が破棄されるが、Saved Stateは破棄されない。両方が保持されていることを前提としている場合、不整合が生じる。](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/699841/b3310ec3-f9f9-4de8-8c57-1156c68d5383.jpeg)
 
 ## まとめ
 
-本記事では、Android アプリにおける各種オブジェクトの生存期間とスコープについて整理した。
+本記事では、Androidアプリにおける各種オブジェクトの生存期間とスコープについて整理した。
 
-各オブジェクトのスコープやライフサイクルの理解は、Android アプリケーションの設計・実装において非常に重要である。リソースの無駄な消費や状態の不整合を回避するためには、スコープやライフサイクルを理解する必要がある。
+各オブジェクトのスコープやライフサイクルの理解は、Androidアプリケーションの設計・実装において非常に重要である。リソースの無駄な消費や状態の不整合を回避するためには、スコープやライフサイクルを理解する必要がある。
 
 ## 参考
 

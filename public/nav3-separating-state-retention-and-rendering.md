@@ -1,5 +1,5 @@
 ---
-title: Nav3 は状態の保持と描画を分けて考えると設計しやすい
+title: Nav3は状態の保持と描画を分けて考えると設計しやすい
 tags:
   - Android
   - Kotlin
@@ -16,23 +16,23 @@ ignorePublish: false
 
 ## はじめに
 
-Jetpack Navigation 3（以下 Nav3）は柔軟性が高い一方で、実装方針が 1 つに定まっているわけではありません。そのため、実運用ではアプリの要件に応じて設計する場面が多く、実装が複雑になりやすいです。
+Jetpack Navigation 3（以下Nav3）は柔軟性が高い一方で、実装方針が1つに定まっているわけではありません。そのため、実運用ではアプリの要件に応じて設計する場面が多く、実装が複雑になりやすいです。
 
-本記事では、Nav3 において状態の保持と描画を分けて考えると、なぜ設計しやすくなるのかを説明します。
+本記事では、Nav3において状態の保持と描画を分けて考えると、なぜ設計しやすくなるのかを説明します。
 
-なお、本記事で紹介するアプローチは [`android/nav3-recipes`](https://github.com/android/nav3-recipes) の [#242](https://github.com/android/nav3-recipes/pull/242) にて、公式のレシピとしては採用されませんでした。これはアプローチ自体に問題があるのではなく、レシピとして適切ではなかったためだと考えています。しかし、Nav3 の設計の自由度や仕組みを理解する上では有用な視点であるため、本記事で取り上げます。
+なお、本記事で紹介するアプローチは [`android/nav3-recipes/pull/242`](https://github.com/android/nav3-recipes/pull/242) にて、公式のレシピとしては採用されませんでした。これはアプローチ自体に問題があるのではなく、レシピとして適切ではなかったためだと考えています。しかし、Nav3の設計の自由度や仕組みを理解する上では有用な視点であるため、本記事で取り上げます。
 
-## Nav3 とは
+## Nav3とは
 
-Nav3 は Compose のための新しい画面遷移の仕組みです。バックスタックの状態変化が UI に反映される宣言的な設計になっています。
+Nav3はComposeのための新しい画面遷移の仕組みです。バックスタックの状態変化がUIに反映される宣言的な設計になっています。
 
-Nav3 を扱うときに利用することが多い `NavBackStack`、`rememberDecoratedNavEntries`、`NavDisplay` について簡単に説明します。
+Nav3を扱うときに利用することが多い `NavBackStack`、`rememberDecoratedNavEntries`、`NavDisplay` について簡単に説明します。
 
 ### `NavBackStack`
 
 `NavBackStack` はバックスタックを管理するための型です。実体としては、`Serializable` な `SnapshotStateList<NavKey>` です。
 
-つまり `NavBackStack` は、Nav3 の遷移を扱うための高度な仕組みというより、Nav3 の標準的なバックスタック表現の 1 つと考えるのがよいでしょう。
+つまり `NavBackStack` は、Nav3の遷移を扱うための高度な仕組みというより、Nav3の標準的なバックスタック表現の1つと考えるのがよいでしょう。
 
 独自の画面遷移を設計する場合は、`NavBackStack` を使わずに独自実装しても構いません[^no-navkey-navbackstack]。具体例は後述の[遷移の設計は自由](#遷移の設計は自由)で説明します。
 
@@ -64,7 +64,7 @@ public fun <T : Any> rememberDecoratedNavEntries(
 
 `NavDisplay` は、`entries: List<NavEntry<T>>` を受け取って描画するための関数です[^navdisplay-backstack]。`NavDisplay` は遷移状態を管理するのではなく、`entries` を描画する役割を担います[^on-back]。
 
-[^navdisplay-backstack]: `NavDisplay` には `backStack: List<T>` を直接受け取り、内部で `rememberDecoratedNavEntries` を呼ぶ API もあります。また `Scene` を明示的に扱う API もあります。本記事では「遷移状態をどう分離して設計するか」に焦点を当てるため、`entries` を直接扱う形で説明します。
+[^navdisplay-backstack]: `NavDisplay` には `backStack: List<T>` を直接受け取り、内部で `rememberDecoratedNavEntries` を呼ぶAPIもあります。また `Scene` を明示的に扱うAPIもあります。本記事では「遷移状態をどう分離して設計するか」に焦点を当てるため、`entries` を直接扱う形で説明します。
 
 [^on-back]: `NavDisplay` は描画だけでなく `onBack` にて戻る操作の消費も行います。
 
@@ -80,7 +80,7 @@ public fun <T : Any> NavDisplay(
 
 ## 保持と描画を分けて考える
 
-実際のアプリ開発の場面では、1 方向の単純な遷移だけでなく、タブやナビゲーションバーによる遷移も扱うことが多いです。このような UI では「画面としては表示されていないが、タブの状態は保持しておきたい」という要件が発生します。
+実際のアプリ開発の場面では、1方向の単純な遷移だけでなく、タブやナビゲーションバーによる遷移も扱うことが多いです。このようなUIでは「画面としては表示されていないが、タブの状態は保持しておきたい」という要件が発生します。
 
 例えば、以下のように遷移状態を `NavigationState` という独自のモデルで管理することを考えましょう。このように保持対象のバックスタックと描画対象のバックスタックを分けて扱うことで、非アクティブなタブの状態は保持しつつ、現在表示中のタブだけを描画できます。タブ切り替えやナビゲーションバーを伴う構成でも、この分離を意識すると設計しやすくなります。
 
@@ -113,7 +113,7 @@ fun NavigationState.toDecoratedEntries(
 
 ## 遷移の設計は自由
 
-前述の実装例から分かるとおり、遷移の設計には高い自由度があります。少なくとも以下の 2 点を満たせば、遷移状態の持ち方と描画の分け方をある程度自由に設計できます。
+前述の実装例から分かるとおり、遷移の設計には高い自由度があります。少なくとも以下の2点を満たせば、遷移状態の持ち方と描画の分け方をある程度自由に設計できます。
 
 - 状態を保持したいバックスタックを `rememberDecoratedNavEntries` に渡す
 - 画面を描画したい `NavEntry` 群だけを `NavDisplay` に渡す
@@ -130,7 +130,7 @@ sealed interface NavNode {
 
 ## まとめ
 
-- Nav3 では、状態の保持と描画を分けて考えると設計しやすい
+- Nav3では、状態の保持と描画を分けて考えると設計しやすい
 - `rememberDecoratedNavEntries` には、状態保持する対象のバックスタックを全て渡す
 - `NavDisplay` には、生成された `entries` の中から描画するものだけを渡す
 

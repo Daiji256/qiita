@@ -1,5 +1,5 @@
 ---
-title: 'mapState / combineState: StateFlow を同期処理で変換・合成する'
+title: 'mapState / combineState: StateFlowを同期処理で変換・合成する'
 tags:
   - Android
   - Kotlin
@@ -14,12 +14,12 @@ slide: false
 ignorePublish: false
 ---
 
-Android アプリ開発において、`StateFlow` は UI 状態管理に不可欠です。しかし、実際の開発では以下の課題に直面することがあります：
+Androidアプリ開発において、`StateFlow` はUI状態管理に不可欠です。しかし、実際の開発では以下の課題に直面することがあります：
 
 - `StateFlow` から別の `StateFlow` への変換
 - 複数の `StateFlow` を組み合わせた `StateFlow` の作成
 
-本記事では、これらの課題を解決する **`mapState`** と **`combineState`** を提案し、Android アプリ開発での活用例を紹介します。
+本記事では、これらの課題を解決する **`mapState`** と **`combineState`** を提案し、Androidアプリ開発での活用例を紹介します。
 
 ## 標準的なアプローチの問題点
 
@@ -108,7 +108,7 @@ inline fun <reified T, R> combineState(
 }
 ```
 
-## Android アプリ開発での利用例
+## Androidアプリ開発での利用例
 
 ### `mapState` による変換例
 
@@ -164,7 +164,7 @@ class UserEditViewModel : ViewModel() {
 
 | 項目             | `map` / `combine` + `stateIn` | `mapState` / `combineState` |
 | :--------------- | :---------------------------- | :-------------------------- |
-| CPU 使用量       | 低（キャッシュ済み値）        | 高（参照時に計算）          |
+| CPU使用量        | 低（キャッシュ済み値）        | 高（参照時に計算）          |
 | メモリ使用量     | 高（キャッシュ保持）          | 低（都度計算）              |
 | 初期化コスト     | 高（コルーチン起動）          | 低（オブジェクト作成）      |
 | `CoroutineScope` | 必要                          | 不要                        |
@@ -184,7 +184,7 @@ class UserEditViewModel : ViewModel() {
 
 ## まとめ
 
-本記事では、`StateFlow` の変換・合成における従来手法の課題を整理し、それを解決する `mapState` / `combineState` を提案しました。提案手法は、実装量の削減、メモリ効率の向上、初期化コストの低減を実現しつつ、適切な条件下で効率的に動作します。変換処理の特性やアクセス頻度に応じて使い分けることで、より柔軟で効率的な UI 状態管理が可能になります。
+本記事では、`StateFlow` の変換・合成における従来手法の課題を整理し、それを解決する `mapState` / `combineState` を提案しました。提案手法は、実装量の削減、メモリ効率の向上、初期化コストの低減を実現しつつ、適切な条件下で効率的に動作します。変換処理の特性やアクセス頻度に応じて使い分けることで、より柔軟で効率的なUI状態管理が可能になります。
 
 ## 参考文献
 

@@ -1,5 +1,5 @@
 ---
-title: 簡単で安全な UriHandler の実装例と利用方法
+title: 簡単で安全なUriHandlerの実装例と利用方法
 tags:
   - Android
   - Kotlin
@@ -16,7 +16,7 @@ ignorePublish: false
 
 ## `UriHandler` とは
 
-`UriHandler` は `androidx.compose.ui.platform` が提供する、URI（Web ページ、ファイル、外部アプリなど）を開くためのインターフェースです。Composable 関数からは、以下のようにシンプルに呼び出せます。
+`UriHandler` は `androidx.compose.ui.platform` が提供する、URI（Webページ、ファイル、外部アプリなど）を開くためのインターフェースです。Composable関数からは、以下のようにシンプルに呼び出せます。
 
 ```kotlin
 @Composable
@@ -30,11 +30,11 @@ fun OpenUriButton(uri: String) {
 
 ## Android におけるデフォルトの `UriHandler`
 
-`LocalUriHandler.current` で取得されるのは、各プラットフォームに応じた `UriHandler` の実装です。Android 環境では、デフォルトとして `AndroidUriHandler` が使用されます。
+`LocalUriHandler.current` で取得されるのは、各プラットフォームに応じた `UriHandler` の実装です。Android環境では、デフォルトとして `AndroidUriHandler` が使用されます。
 
-`AndroidUriHandler` では、URI に対応するアプリがインストールされていない場合や、URI の形式が無効な場合などに `IllegalArgumentException` が throw されます。そのため、呼び出し側ではクラッシュ（アプリの異常終了）を防ぐため、例外処理を行う必要があります。
+`AndroidUriHandler` では、URIに対応するアプリがインストールされていない場合や、URIの形式が無効な場合などに `IllegalArgumentException` がthrowされます。そのため、呼び出し側ではクラッシュ（アプリの異常終了）を防ぐため、例外処理を行う必要があります。
 
-<details><summary>AndroidUriHandler.android.kt 全文</summary>
+<details><summary>AndroidUriHandler.android.kt全文</summary>
 
 https://cs.android.com/search?q=file:androidx/compose/ui/platform/AndroidUriHandler.android.kt+class:androidx.compose.ui.platform.AndroidUriHandler
 
@@ -95,15 +95,15 @@ class AndroidUriHandler(private val context: Context) : UriHandler {
 }
 ```
 
-## 簡単に安全に URI を開くために
+## 簡単に安全にURIを開くために
 
-記事中のリンクやお知らせなど、ユーザーに URI を開かせたいシーンは多々あります。ほとんどの場合では URI を開くのに失敗したときは、ユーザーにそのことを伝えれば十分です。
+記事中のリンクやお知らせなど、ユーザーにURIを開かせたいシーンは多々あります。ほとんどの場合ではURIを開くのに失敗したときは、ユーザーにそのことを伝えれば十分です。
 
-しかし、毎回呼び出し側で例外処理を実装するのは煩雑です。また、ライブラリや SDK 内で `UriHandler` を呼び出している場合は、例外処理を差し込むのが難しいケースもあります。
+しかし、毎回呼び出し側で例外処理を実装するのは煩雑です。また、ライブラリやSDK内で `UriHandler` を呼び出している場合は、例外処理を差し込むのが難しいケースもあります。
 
-そこで、例外を throw する代わりに Toast を表示する独自の `UriHandler`（`SafeUriHandler`）を実装しました[^toast]。`CompositionLocalProvider` を使用して `LocalUriHandler` を上書きすることで、以降の処理では `LocalUriHandler.current` を通じて `SafeUriHandler` を取得できます。これにより、アプリケーション全体で安全な URI オープン処理を適用することが可能です。
+そこで、例外をthrowする代わりにToastを表示する独自の `UriHandler`（`SafeUriHandler`）を実装しました[^toast]。`CompositionLocalProvider` を使用して `LocalUriHandler` を上書きすることで、以降の処理では `LocalUriHandler.current` を通じて `SafeUriHandler` を取得できます。これにより、アプリケーション全体で安全なURIオープン処理を適用することが可能です。
 
-[^toast]: `SafeUriHandler` は簡易な通知手段として Toast を利用していますが、UI の状態に応じて Snackbar や Dialog を用いる方が適切な場合もあります。
+[^toast]: `SafeUriHandler` は簡易な通知手段としてToastを利用していますが、UIの状態に応じてSnackbarやDialogを用いる方が適切な場合もあります。
 
 ```kotlin
 class SafeUriHandler(private val context: Context) : UriHandler {
@@ -130,15 +130,15 @@ fun MyApp() {
 }
 ```
 
-|                                                          URI を開ける場合                                                           |                                                         URI を開けない場合                                                          |
+|                                                          URIを開ける場合                                                           |                                                         URIを開けない場合                                                          |
 | :---------------------------------------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------------------------------------: |
 | <img src="https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/699841/f1d26180-d8dc-4494-9fc1-a5b03b8c8ba6.gif" width="180"> | <img src="https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/699841/4b17e779-47d0-4cd5-a5fb-59bd5bfcaeb0.gif" width="180"> |
 
 ## まとめ
 
 - `LocalUriHandler.current` を使用すると、プラットフォーム標準の `UriHandler` を取得できます
-- デフォルトの `AndroidUriHandler` は、URI の起動に失敗した際に例外を throw し、アプリがクラッシュする可能性があります
-- `SafeUriHandler` のように例外を throw しない独自の `UriHandler` を実装することで、呼び出し側での例外処理が不要になります
+- デフォルトの `AndroidUriHandler` は、URIの起動に失敗した際に例外をthrowし、アプリがクラッシュする可能性があります
+- `SafeUriHandler` のように例外をthrowしない独自の `UriHandler` を実装することで、呼び出し側での例外処理が不要になります
 - `CompositionLocalProvider` を使って `LocalUriHandler` を上書きすることで、アプリ全体を通して独自処理利用できます
 
 ## 参考文献
