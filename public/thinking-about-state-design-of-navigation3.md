@@ -10,82 +10,136 @@ slide: false
 ignorePublish: false
 ---
 
-# Navigation 3と向き合った1年間。状態管理の理想を追い求めて辿り着いた「設計しない設計」
+# Nav3の状態管理の設計をどう考えるか
 
-Androidの新しいナビゲーションライブラリ、**Navigation 3**が登場してから約1年が経とうとしています。従来のJetpack Navigation（Navigation 2.x）の制約から解放され、高い自由度を手に入れた一方で、「どう実装するのが正解なのか」と頭を悩ませている方も多いのではないでしょうか。
+Jetpack Navigation 3（以下Nav3）はJetpack Composeによる状態管理を前提に、ゼロから構築された新しいナビゲーションライブラリです。高い柔軟性・カスタマイズ性を持つことが特徴の1つです。
 
-この記事では、私がNavigation 3を導入し、複数の設計パターンを経て最終的な結論に至るまでの「通ってきた道」をまとめます。
+一方で、その自由度からNav3の使い方は多様です。実装者が迷わないためには適切な設計が必要になります。
 
-## 第1段階：最もシンプルな「バックスタックの直接制御」
+この記事では、Nav3と向き合いいくつかの設計を考えた上で辿り着いた結論[^current-conclusion]までの「通ってきた道」を紹介します。
 
-最初に試したのは、最もオーソドックスでシンプルな方法です。`MutableList`などで管理したバックスタックをそのまま`NavDisplay`に渡すという構成です。
+[^current-conclusion]: あくまでも、2026-03-23時点での結論です。今後、考えを改める可能性は十分にあります。
 
-  * **良かった点:** 導入が非常に楽。画面遷移や基本的なアニメーションの実装もスムーズに行えました。
-  * **直面した課題:** **「裏側での状態保持」ができない**こと。
-    例えば、ナビゲーションバー（Bottom Succession等）で画面を切り替える際、前の画面を破棄せずに裏で保持し、戻った時にその状態を復元するという挙動に対応できませんでした。
+## 通ってきた道
 
-## 第2段階：複数バックスタックと公式レシピの採用
+### 単純なバックスタック
 
-次に、公式ドキュメント（Migration from Nav2 to Nav3）や[Navigation 3 Recipes](https://www.google.com/search?q=https://github.com/android/nowinandroid/tree/main/core/navigation)を参考に、複数のバックスタックを持つ構成を試しました。
+最初に試したのは、`rememberNavBackStack` で生成したバックスタックをそのまま `NavDisplay` に渡すという構成です。`entryProvider` は `entryProvider` DSLを利用しました。
 
-各ナビゲーションアイテムごとにバックスタックを用意し、それらを切り替えることで、求めていた「裏側での保持」やネストされた遷移を実現できました。しかし、ここで2つの大きな問題にぶつかります。
+この実装は[android/nav3-recipes - Basic DSL Recipe](https://github.com/android/nav3-recipes/tree/main/app/src/main/java/com/example/nav3recipes/basicdsl)で紹介されているアプローチと同等です。
 
-### 1\. 状態共有の制約
+- **メリット:** Nav3に処理のほぼ全てを任せることができるため、簡単に実装できる
+- **デメリット:** ナビゲーションバーによる画面切り替えなどの、バックスタックからは消えるが状態は保持したいときの対応が難しい[^scene-navigation-bar]
 
-タブAとタブBで同じ画面を開く際、どこまで状態を共有させるかという管理コストの問題です。
+[^scene-navigation-bar]: `Scene` をうまく使うことで、バックスタック上に含まれた上で `onBack` の処理が実行されないようにするなどの工夫は可能です。
 
-### 2\. 「ホーム画面以前」の動的制御
+```kotlin
+val backStack = rememberNavBackStack(ANavKey)
+NavDisplay(
+    backStack = backStack,
+    onBack = { backStack.removeLastOrNull() },
+    entryProvider = entryProvider {
+        entry<ANavKey> { /*...*/ }
+        entry<BNavKey> { /*...*/ }
+    },
+)
+```
 
-これが最大の懸念でした。現代のアプリでは「まずホーム（ナビゲーションバーがある画面）」が基本ですが、現実の要件ではそうもいきません。
+### 複数バックスタック
 
-  * 利用規約への同意が必須
-  * 未ログイン時の認証・会員登録フロー
-  * メンテナンス画面の差し込み
-    これらは「ナビゲーションバーが存在しない画面」から「存在する画面」への遷移を伴います。現状、Navigation 3のレシピでもこのあたりの制御はIssueとして議論されている段階であり、実用レベルでは一工夫必要だと感じました。
+ナビゲーションバーによる切り替えに対応するために、複数のバックスタックを用意する構成を試しました。それぞれのバックスタックから `rememberDecoratedNavEntries` を利用してエントリーを生成し、トップレベルの選択に応じて切り替える形です。
 
-## 第3段階：木構造（NavNode）による状態定義
+この実装は[android/nav3-recipes - Multiple back stacks recipe](https://github.com/android/nav3-recipes/tree/main/app/src/main/java/com/example/nav3recipes/multiplestacks)や[Migrate from Navigation 2 to Navigation 3](https://developer.android.com/guide/navigation/navigation-3/migration-guide)で紹介されているアプローチと同等です。
 
-「ナビゲーションバーに限らず、特定の画面でAとBをスイッチするなど、裏で状態を保持したいケースは他にもあるはずだ」と考えた私は、画面遷移の状態を\*\*「Node（節）」を用いた木構造\*\*で定義するアプローチを取りました（NavNode V1）。
+- **メリット:** 状態保持を自ら管理できるため、ナビゲーションバーによる切り替えなどに対応できる
+- **デメリット:** 利用規約 → ホーム（トップレベル）などの遷移に対応するには、さらに状態管理を拡張させる必要がある
 
-  * **メリット:** すべての課題を解決できました。状態の保持、バックスタックの自由な操作が可能です。
-  * **課題:** 「画面構成（グラフ）」の定義なのか「現在の状態（ステート）」なのかの境界が曖昧になり、実装が煩雑化しました。メンテナンス性に不安が残る結果となりました。
+```kotlin
+val topLevel = remember { mutableStateOf(TopLevel1NavKey) }
+val backStacks = setOf(TopLevel1NavKey, TopLevel2NavKey).associateWith { key ->
+    rememberNavBackStack(key)
+}
 
-そこで改良版の**NavNode V2**を作成。ノードが子（Child）を持ち、その中から1つを選択するという極めてシンプルなネスト構造にブラッシュアップしました。これにより保存（SavedState）も容易になり、実用的なサンプルコードまで書き上げました。
-（※実装の詳細は末尾のサンプルURLを参照してください）
+val entryProvider = entryProvider { /*...*/ }
+val entries = backStacks.mapValues { (_, stack) ->
+    rememberDecoratedNavEntries(
+        backStack = stack,
+        entryProvider = entryProvider,
+    )
+}
 
-## 最終結論：汎用的な設計を「捨てる」という選択
+NavDisplay(
+    entries = entries[topLevel] ?: emptyList(),
+    onBack = { /*...*/ },
+)
+```
 
-NavNode V2は非常に汎用性が高く、多くの要件を満たせる便利なものでした。しかし、コードを書き切る直前で私はあることに気づき、この案を没にしました。
+### 木構造で状態を定義
 
-**「Navigation 3で、Navigation 2のような汎用フレームワークを自作し直してどうするんだ？」**
+利用規約からトップレベルへの遷移や、AとBの切り替えなど、柔軟なバックスタックの切り替えや状態保持が必要なケースは他にもあると考えました。そこで、遷移状態を木構造で定義するアプローチを試しました。ここで説明するのは、その一例[^navnode-trial-and-error]でノード（NavNode）を定義し、現在のノードを保持する形です。
 
-Navigation 3のコンセプトは「責任と自由」です。バックスタックの管理も、状態の保持も、すべてを開発者の手に委ねるという思想です。
-私が全力で作った「NavNode」は、私にとっては使いやすくても、すべての人にとっての正解ではありません。特定のドメインに強固に紐付いた設計ができることこそが、Navigation 3の真価なのです。
+[^navnode-trial-and-error]: `NavNode` の試行錯誤には時間がかかりました。`NavNode` にleaf/stack/selectといった役割を持たせたり、navigate upのための機能を持たせたりなど、機能の追加・削除を繰り返しました。
 
-### 私たちがすべきこと
+`NavNode` による遷移を実用に耐えるものにするには、saveableにする対応や、うまく状態を書き換えるための関数の定義などが必要です。詳しい実装例は[Daiji256/android-showcase - navigation](https://github.com/Daiji256/android-showcase/tree/a7086ca259cea695bf03435c92b63be20ea848c0/core/ui/src/main/kotlin/io/github/daiji256/showcase/core/ui/navigation)にあります。
 
-「これがNavigation 3の正解パターンです」という汎用的な設計を追い求めるのは、Navigation 3の良さを殺すことになりかねません。
+- **メリット:** 表示・非表示に関わらず、まとめて状態を管理できるため、ナビゲーションバーによる切り替えなどに対応できる
+- **デメリット:** アプリの要件を満たすために、拡張を強いられる場合があり、うまく設計・実装を行う必要がある
 
-1.  **アプリのドメイン（要件）に合わせて個別に設計する。**
-2.  以前投稿した[状態管理の記事](https://qiita.com/Daiji256/items/c9cb9d8279c9bad687cc)のように、**「状態をどう持つか」という原則に基づき、自分なりにアレンジを加える。**
+```kotlin
+class NavNode internal constructor(
+    val key: NavKey,
+) {
+    var currentChild: NavNode? by mutableStateOf<NavNode?>(null)
+    val children: SnapshotStateSet<NavNode> = mutableStateSetOf<NavNode>()
+}
+```
 
-結局のところ、\*\*「各々が自分のアプリに最適な設計を考えること」\*\*そのものがNavigation 3というライブラリの本質なのだと考えさせられました。
+```kotlin
+val node: NavNode = // ...
+val inactiveBackStack: List<NavKey> = // ...
+val activeBackStack: List<NavKey> = // ...
+
+val allEntries = rememberDecoratedNavEntries(
+    backStack = inactiveBackStack + activeBackStack,
+    entryProvider = entryProvider,
+)
+
+val entries = remember(allEntries, inactiveBackStack, activeBackStack) {
+    allEntries.takeLast(activeBackStack.size)
+}
+```
+
+### 専用設計
+
+`NavNode` による画面遷移はある程度の汎用性・自由度を確保します。そのため、多くのアプリの要件を満たすことができると考えています。一方で、ディープリンクやnavigate up（上へ移動）などの実装を考えると、拡張が必要になります。また、現時点で想定できていない要件[^unexpected]には、それに合わせた変更が必要です。
+
+[^unexpected]: 例えば、`NavDisplay` を複数配置することや、複雑な `Scene` の構成などが考えられます。
+
+言い換えると `NavNode` はある程度まで汎用性・自由度を制限することで、特定のドメインに縛られず、かつそこそこ安全に画面遷移を管理するためのものです。悪く言えば、Nav3でNav2を作り直すような気持ち悪さがあります[^my-nav2]。
+
+[^my-nav2]: 実際には `NavNode` の設計はNav2とは異なります。ただ、「誰かが考えた汎用的な画面遷移」という点ではNav2と同様です。
+
+TODO: 以下のことを書く
+
+- [Nav3は状態の保持と描画を分けて考えると設計しやすい](https://qiita.com/Daiji256/items/c9cb9d8279c9bad687cc)を紹介しつつ、独自設計を勧める
+- 画面遷移の設計にドメインをどこまで含めるかの是非について
+- 適当な実装例
+- ある意味では、「複数バックスタック」の進化系というアプローチであること
+
+## 状態管理の設計をどう考えるか
+
+TODO: 以下の内容には触れたい
+
+> Lastly, you asked for more flexibility and customizability. Rather than having a single, monolithic API, Nav3 provides smaller, decoupled APIs (or "building blocks") that can be combined together to create complex functionality. Nav3 itself uses these building blocks to provide sensible defaults for well-defined navigation use cases. 
 
 ## まとめ
 
-Navigation 3は、実装方法が極めて多角的です。
+TODO: 3-4行程度の箇条書き
 
-  * ある程度の秩序を持たせた汎用的な実装も可能。
-  * ドメインと密結合させる代わりに、極めて自由な遷移設計も可能。
+## 参考文献
 
-「どう書くべきか」の答えはライブラリの中ではなく、皆さんのアプリの要件の中にあります。私の試行錯誤の記録が、皆さんが「自分なりのナビゲーション」を設計する際のヒントになれば幸いです。
-
------
-
-### 参考リンク
-
-  * [Navigation 3 試行錯誤のサンプル (Pull Request)](https://github.com/Daiji256/android-showcase/pull/289)
-  * [関連記事：Navigation3時代の状態管理を考える](https://qiita.com/Daiji256/items/c9cb9d8279c9bad687cc)
-
-> **フットノート：実装の裏話**
-> NavNodeを実装する際、メモリリークを防ぐための状態管理や、`rememberSaveable`を用いたシリアライズ対応にはかなり苦労しました。自由度が高い分、足回りの実装には細心の注意が必要です。
+- [android/nav3-recipes | GitHub](https://github.com/android/nav3-recipes)
+- [Android Developers Blog: Jetpack Navigation 3 is stable | Android Developers Blog](https://android-developers.googleblog.com/2025/11/jetpack-navigation-3-is-stable.html)
+- [Migrate from Navigation 2 to Navigation 3 | App architecture | Android Developers](https://developer.android.com/guide/navigation/navigation-3/migration-guide)
+- [Nav3は状態の保持と描画を分けて考えると設計しやすい | Qiita](https://qiita.com/Daiji256/items/c9cb9d8279c9bad687cc)
+- [Daiji256/android-showcase - navigation | GitHub](https://github.com/Daiji256/android-showcase/tree/a7086ca259cea695bf03435c92b63be20ea848c0/core/ui/src/main/kotlin/io/github/daiji256/showcase/core/ui/navigation)
