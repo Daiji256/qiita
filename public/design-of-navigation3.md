@@ -12,6 +12,8 @@ ignorePublish: false
 
 # Nav3による画面遷移の設計をどう考えるか
 
+## はじめに
+
 Jetpack Navigation 3（以下Nav3）は、Jetpack Composeによる状態管理を前提にゼロから構築された、新しい画面遷移ライブラリです。高い柔軟性とカスタマイズ性を持つことが大きな特徴の1つです。
 
 この記事では、Nav3による画面遷移の設計の個人的な結論[^current-conclusion]までの試行錯誤を紹介します。
