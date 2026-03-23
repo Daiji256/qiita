@@ -7,8 +7,8 @@ tags:
   - JetpackCompose
   - Navigation3
 private: false
-updated_at: ''
-id: null
+updated_at: '2026-03-23T21:56:24+09:00'
+id: abbbb034ff35d854e11a
 organization_url_name: null
 slide: false
 ignorePublish: false
