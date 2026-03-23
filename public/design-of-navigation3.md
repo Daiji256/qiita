@@ -52,7 +52,7 @@ NavDisplay(
 この実装は、[android/nav3-recipes - Multiple back stacks recipe](https://github.com/android/nav3-recipes/tree/main/app/src/main/java/com/example/nav3recipes/multiplestacks)や[Migrate from Navigation 2 to Navigation 3](https://developer.android.com/guide/navigation/navigation-3/migration-guide)で紹介されているアプローチと同様です。
 
 - **メリット:** 状態保持を明示的に管理できるため、ナビゲーションバーによる切り替えなどに対応できる
-- **デメリット:** ｢利用規約からホーム（トップレベル）への遷移」などを実現するには、さらに独自の拡張が必要になる
+- **デメリット:** 「利用規約からホーム（トップレベル）への遷移」などを実現するには、さらに独自の拡張が必要になる
 
 ```kotlin
 val topLevel by remember { mutableStateOf(TopLevel1NavKey) }
@@ -76,7 +76,7 @@ NavDisplay(
 
 ### 木構造による状態定義
 
-｢利用規約からトップレベルへの遷移」や「特定条件でのスタック切り替え」など、より柔軟な状態保持のニーズに応えるため、遷移状態を木構造で定義するアプローチを検討しました。具体的には、ノード（`NavNode`）を定義し、現在の活性ノードを保持する形です。
+「利用規約からトップレベルへの遷移」や「特定条件でのスタック切り替え」など、より柔軟な状態保持のニーズに応えるため、遷移状態を木構造で定義するアプローチを検討しました。具体的には、ノード（`NavNode`）を定義し、現在の活性ノードを保持する形です。
 
 [^navnode-trial-and-error]: `NavNode` の設計には多くの時間を費やしました。leaf / stack / selectといった役割の定義や、Navigate Upなど、機能の追加・削除を繰り返しました。
 
@@ -111,7 +111,7 @@ val entries = remember(allEntries, inactiveBackStack, activeBackStack) {
 
 ### ドメインに特化した専用設計（現在の結論）
 
-`NavNode` による画面遷移は、ある程度の汎用性と自由度を確保できます。そのため、多くのアプリの要件を満たせると考えています。一方で、ディープリンクや Navigate Up（上へ移動）などの実装を考えると、さらなる拡張が必要になります。また、現時点で想定できていない要件[^unexpected]に対しては、それに合わせた変更が必要になります。
+`NavNode` による画面遷移は、ある程度の汎用性と自由度を確保できます。そのため、多くのアプリの要件を満たせると考えています。一方で、ディープリンクからの特定の階層への直接復帰や、複数画面の同時popなどを汎用的に処理しようとすると状態管理が複雑化し、さらなる拡張が必要になります。また、現時点で想定できていない要件[^unexpected]に対しては、それに合わせた変更が必要になります。
 
 [^unexpected]: 例えば、1画面内での `NavDisplay` の多重配置や、複雑な `Scene` 構成などが挙げられます。
 
