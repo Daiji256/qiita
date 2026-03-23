@@ -16,17 +16,17 @@ ignorePublish: false
 
 ## はじめに
 
-Jetpack Navigation 3（以下Nav3）は、Composeによる状態管理を前提に構築された新しい画面遷移ライブラリです。高い柔軟性とカスタマイズ性が特徴です。
+Jetpack Navigation 3（以下Nav3）は、Composeによる状態管理を前提に構築された新しい画面遷移ライブラリです。高い柔軟性とカスタマイズ性を備えています。
 
 この記事では、Nav3による画面遷移の設計について、個人的な結論[^current-conclusion]に至るまでの試行錯誤と、要件に応じた構成の選択基準を整理します。
 
 [^current-conclusion]: 2026年3月23日時点での個人的な結論です。今後のアップデートや知見により変化する可能性があります。
 
-## 要件による設計の変化
+## 要件に応じた設計の変化
 
 Nav3はComposeの状態を前提とした疎結合なAPI群であり、[android/nav3-recipes](https://github.com/android/nav3-recipes)でも要件に応じた複数の実装アプローチが示されています。
 
-特に、ナビゲーションバー等による画面切り替えの有無、ディープリンクの要件、`Scene` の扱いといった要素によって、適切な設計は大きく変わります。
+特に、ナビゲーションバーなどによる画面切り替えの有無、ディープリンクの要件、`Scene` の扱いといった要素によって、適切な設計は大きく変わります。
 
 ## 試行錯誤
 
@@ -35,7 +35,7 @@ Nav3はComposeの状態を前提とした疎結合なAPI群であり、[android/
 `rememberNavBackStack` で生成したバックスタックをそのまま `NavDisplay` に渡す、最もシンプルな構成です。これは、[android/nav3-recipes - Basic DSL Recipe](https://github.com/android/nav3-recipes/tree/main/app/src/main/java/com/example/nav3recipes/basicdsl)で紹介されています。
 
 - **向いている要件:** 直線的な画面遷移のみで構成されている
-- **メリット:** 処理をNav3に一任でき、実装が極めてシンプル
+- **メリット:** 処理をNav3に一任できるため、実装が極めてシンプル
 - **デメリット:** ナビゲーションバーなどの画面切り替えへの対応が困難[^scene-navigation-bar]
 
 [^scene-navigation-bar]: `Scene` を活用し、スタックに含めたまま `onBack` を呼び出さないなどの工夫は可能です。
@@ -57,7 +57,7 @@ NavDisplay(
 ナビゲーションバーによる画面切り替えに対応する、複数のバックスタックを保持する構成です。トップレベルの選択状態に応じて `rememberDecoratedNavEntries` で生成したエントリーを切り替えます。これは、[android/nav3-recipes - Multiple back stacks recipe](https://github.com/android/nav3-recipes/tree/main/app/src/main/java/com/example/nav3recipes/multiplestacks)や[Migrate from Navigation 2 to Navigation 3](https://developer.android.com/guide/navigation/navigation-3/migration-guide)で紹介されています。
 
 - **向いている要件:** トップレベルのバックスタック切り替えのみによる画面遷移で構成されている
-- **メリット:** 状態保持を明示的に管理でき、タブ切り替え等に自然に対応可能
+- **メリット:** 状態保持を明示的に管理でき、タブ切り替えなどにも自然に対応可能
 - **デメリット:** 「深い階層（利用規約など）からトップレベル（ホームなど）への遷移」などを実現するには独自の拡張が必要
 
 ```kotlin
@@ -120,7 +120,7 @@ val entries = remember(allEntries, inactiveBackStack, activeBackStack) {
 
 [^my-nav2]: 実際には `NavNode` の設計はNav2とは異なります。ただ、「外部要件を幅広く吸収するための汎用的な画面遷移API」という点ではNav2と似た性質があります。
 
-Nav3の真価は、巨大なAPIではなく「疎結合な最小限のAPI群」である点にあります。そのため、「汎用的な画面遷移APIを作るのではなく、アプリのドメイン（要件）に特化した専用の設計を都度定義する」ことが、Nav3の最も素直な活用法であるという結論に至りました。
+Nav3の真価は、巨大なAPIではなく「疎結合な最小限のAPI群」である点にあります。そのため、「汎用的な画面遷移APIを作るのではなく、アプリのドメイン（要件）に特化した専用の設計をその都度定義する」ことが、Nav3の最も素直な活用法であるという結論に至りました。
 
 APIの使い分けや設計のポイントについては、[Nav3は状態の保持と描画を分けて考えると設計しやすい](https://qiita.com/Daiji256/items/c9cb9d8279c9bad687cc)で紹介しています。
 
@@ -130,7 +130,7 @@ APIの使い分けや設計のポイントについては、[Nav3は状態の保
 
 ## まとめ
 
-Nav3による画面遷移は、実装者が設計を完全にコントロールできます。無理にNav2のような汎用APIを構築するよりも、公式レシピが示すようにアプリの要件に合わせて状態設計を行うことで、Nav3の強みを最大限に活かすことができます。
+Nav3による画面遷移は、実装者が設計を完全にコントロールできます。無理にNav2のような汎用APIを構築するのではなく、公式レシピが示すようにアプリの要件に合わせて状態設計を行うことで、Nav3の強みを最大限に活かすことができます。
 
 ## 参考文献
 
