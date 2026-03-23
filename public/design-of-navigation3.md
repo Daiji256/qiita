@@ -12,24 +12,24 @@ ignorePublish: false
 
 # Nav3による画面遷移の設計をどう考えるか
 
-Jetpack Navigation 3（以下Nav3）はJetpack Composeによる状態管理を前提に、ゼロから構築された新しい画面遷移のためのライブラリです。高い柔軟性・カスタマイズ性を持つことが特徴の1つです。
+Jetpack Navigation 3（以下Nav3）は、Jetpack Composeによる状態管理を前提にゼロから構築された、新しい画面遷移ライブラリです。高い柔軟性とカスタマイズ性を持つことが大きな特徴の1つです。
 
-この記事では、Nav3と向き合いいくつかの設計を考えた上で辿り着いた結論[^current-conclusion]までの「通ってきた道」を紹介します。
+この記事では、Nav3による画面遷移の設計の個人的な結論[^current-conclusion]までの試行錯誤を紹介します。
 
-[^current-conclusion]: あくまでも、2026-03-23時点での結論です。今後、考えを改める可能性は十分にあります。
+[^current-conclusion]: あくまでも2026年3月23日時点での個人的な結論です。今後のアップデートや知見により、考えを改める可能性は十分にあります。
 
-## 通ってきた道
+## 試行錯誤
 
 ### 単純なバックスタック
 
-最初に試したのは、`rememberNavBackStack` で生成したバックスタックをそのまま `NavDisplay` に渡すという構成です。`entryProvider` は `entryProvider` DSLを利用しました。
+最初に試したのは、`rememberNavBackStack` で生成したバックスタックをそのまま `NavDisplay` に渡す構成です。`entryProvider` には `entryProvider` DSLを利用しました。
 
-この実装は[android/nav3-recipes - Basic DSL Recipe](https://github.com/android/nav3-recipes/tree/main/app/src/main/java/com/example/nav3recipes/basicdsl)で紹介されているアプローチと同等です。
+この実装は、[android/nav3-recipes - Basic DSL Recipe](https://github.com/android/nav3-recipes/tree/main/app/src/main/java/com/example/nav3recipes/basicdsl)で紹介されているアプローチと同様です。
 
-- **メリット:** Nav3に処理のほぼ全てを任せることができるため、簡単に実装できる
-- **デメリット:** ナビゲーションバーによる画面切り替えなどの「バックスタックからは消えるが状態は保持したいとき」の対応が難しい[^scene-navigation-bar]
+- **メリット:** 処理のほぼ全てをNav3に一任できるため、非常にシンプルに実装できる
+- **デメリット:** ナビゲーションバーによる画面切り替えなど「バックスタックからは外れるが、状態は保持したい」というケースへの対応が難しい[^scene-navigation-bar]
 
-[^scene-navigation-bar]: `Scene` をうまく使うことで、バックスタック上に含まれた上で `onBack` の処理が実行されないようにするなどの工夫は可能です。
+[^scene-navigation-bar]: `Scene` を活用し、バックスタックに含まれたまま `onBack` の処理をスキップさせるなどの工夫は可能です。
 
 ```kotlin
 val backStack = rememberNavBackStack(ANavKey)
@@ -45,15 +45,15 @@ NavDisplay(
 
 ### 複数バックスタック
 
-ナビゲーションバーによる切り替えに対応するために、複数のバックスタックを用意する構成を試しました。それぞれのバックスタックから `rememberDecoratedNavEntries` を利用してエントリーを生成し、トップレベルの選択に応じて切り替える形です。
+次に、ナビゲーションバーによる切り替えに対応するため、複数のバックスタックを保持する構成を試しました。各バックスタックから `rememberDecoratedNavEntries` を用いてエントリーを生成し、トップレベルの選択状態に応じて表示を切り替える手法です。
 
-この実装は[android/nav3-recipes - Multiple back stacks recipe](https://github.com/android/nav3-recipes/tree/main/app/src/main/java/com/example/nav3recipes/multiplestacks)や[Migrate from Navigation 2 to Navigation 3](https://developer.android.com/guide/navigation/navigation-3/migration-guide)で紹介されているアプローチと同等です。
+この実装は、[android/nav3-recipes - Multiple back stacks recipe](https://github.com/android/nav3-recipes/tree/main/app/src/main/java/com/example/nav3recipes/multiplestacks)や[Migrate from Navigation 2 to Navigation 3](https://developer.android.com/guide/navigation/navigation-3/migration-guide)で紹介されているアプローチと同様です。
 
-- **メリット:** 状態保持を自ら管理できるため、ナビゲーションバーによる切り替えなどに対応できる
-- **デメリット:** 利用規約 → ホーム（トップレベル）などの遷移に対応するには、さらに拡張させる必要がある
+- **メリット:** 状態保持を明示的に管理できるため、ナビゲーションバーによる切り替えなどに対応できる
+- **デメリット:** ｢利用規約からホーム（トップレベル）への遷移」などを実現するには、さらに独自の拡張が必要になる
 
 ```kotlin
-val topLevel = remember { mutableStateOf(TopLevel1NavKey) }
+val topLevel by remember { mutableStateOf(TopLevel1NavKey) }
 val backStacks = setOf(TopLevel1NavKey, TopLevel2NavKey).associateWith { key ->
     rememberNavBackStack(key)
 }
@@ -72,16 +72,16 @@ NavDisplay(
 )
 ```
 
-### 木構造で状態を定義
+### 木構造による状態定義
 
-利用規約からトップレベルへの遷移や、AとBの切り替えなど、柔軟なバックスタックの切り替えや状態保持が必要なケースは他にもあると考えました。そこで、遷移状態を木構造で定義しました。ここで説明するのは、その一例[^navnode-trial-and-error]でノード（`NavNode`）を定義し、現在のノードを保持する形です。
+｢利用規約からトップレベルへの遷移」や「特定条件でのスタック切り替え」など、より柔軟な状態保持のニーズに応えるため、遷移状態を木構造で定義するアプローチを検討しました。具体的には、ノード（`NavNode`）を定義し、現在の活性ノードを保持する形です。
 
-[^navnode-trial-and-error]: `NavNode` の試行錯誤には時間がかかりました。`NavNode` にleaf/stack/selectといった役割を持たせたり、navigate upのための機能を持たせたりなど、機能の追加・削除を繰り返しました。
+[^navnode-trial-and-error]: `NavNode` の設計には多くの時間を費やしました。leaf/stack/selectといった役割の定義や、Navigate Up機能など、機能の追加・削除を繰り返しました。
 
-`NavNode` による遷移を実用に耐えるものにするには、saveableにする対応や、うまく状態を書き換えるための関数の定義などが必要です。詳しい実装例は[Daiji256/android-showcase - navigation](https://github.com/Daiji256/android-showcase/tree/a7086ca259cea695bf03435c92b63be20ea848c0/core/ui/src/main/kotlin/io/github/daiji256/showcase/core/ui/navigation)にあります。
+`NavNode` を実用レベルにするにはSaveableへの対応や、状態遷移を型安全に操作するための関数定義が必要です。詳細な実装例は[Daiji256/android-showcase - navigation](https://github.com/Daiji256/android-showcase/tree/a7086ca259cea695bf03435c92b63be20ea848c0/core/ui/src/main/kotlin/io/github/daiji256/showcase/core/ui/navigation)で公開しています。
 
-- **メリット:** 表示・非表示に関わらず、まとめて状態を管理できるため、ナビゲーションバーによる切り替えなどに対応できる
-- **デメリット:** アプリの要件を満たすために、拡張を強いられる場合があり、うまく設計・実装する必要がある
+- **メリット:** 画面の表示・非表示に関わらず遷移状態を一元管理できるため、複雑な遷移にも柔軟に対応できる
+- **デメリット:** 基盤部分の設計コストが高く、アプリ固有の要件により `NavNode` 自体の拡張を強いられる可能性がある
 
 ```kotlin
 class NavNode internal constructor(
@@ -107,28 +107,28 @@ val entries = remember(allEntries, inactiveBackStack, activeBackStack) {
 }
 ```
 
-### ドメインに特化した専用の設計
+### ドメインに特化した専用設計（現在の結論）
 
-`NavNode` による画面遷移はある程度の汎用性・自由度を確保します。そのため、多くのアプリの要件を満たすことができると考えています。一方で、ディープリンクやnavigate up（上へ移動）などの実装を考えると、さらなる拡張が必要になります。また、現時点で想定できていない要件[^unexpected]には、それに合わせた変更が必要です。
+`NavNode` のような汎用的な仕組みは、多くのアプリで有効です。しかし、ディープリンク対応やNavigate Up、あるいはそれ以外の複雑な要件[^unexpected]を考えると、汎用性を維持したまま拡張し続けるのは限界があると感じました。
 
-[^unexpected]: 例えば、`NavDisplay` を複数配置することや、複雑な `Scene` の構成などが考えられます。
+[^unexpected]: 例えば、1画面内での `NavDisplay` の多重配置や、複雑な `Scene` 構成などが挙げられます。
 
-言い換えると `NavNode` はある程度まで汎用性・自由度を制限することで、特定のドメインに縛られず、かつそこそこ安全に画面遷移を管理するためのものです。悪く言えば、Nav3を用いてNav2のような画面遷移APIを再構築しているような感覚があります[^my-nav2]。
+ある意味で `NavNode` は、自由度をあえて制限することで「Nav3の上にNav2のような汎用APIを再構築している」状態に近いと言えます[^my-nav2]。
 
-[^my-nav2]: 実際には `NavNode` の設計はNav2とは異なります。ただ、「誰かが考えた汎用的な画面遷移API」という点ではNav2と同様です。
+[^my-nav2]: 実際には `NavNode` の設計はNav2とは異なります。ただ「誰かが考えた汎用的な画面遷移API」という点ではNav2と同じです。
 
-そこで、`NavNode` のように汎用的な画面遷移の設計を考えるのではなく、アプリのドメイン（要件）に特化した専用の設計をアプリごとに定義するという考え方に辿り着きました。
+そこで辿り着いたのが**「汎用的な画面遷移を設計するのではなく、アプリのドメイン（要件）に特化した専用の設計をアプリごとに定義する」**という考え方です。
 
-Nav3の大きな特徴は、画面遷移のための様々な機能を搭載した巨大なAPIではなく、いくつかの単純なAPIだけで構成された点です。これらを組み合わせることで複雑な機能も実装することができます。つまり、アプリごとのニーズに合わせて、うまく組み合わせることが、Nav3を最も有効に活用する方法です。
+Nav3の真価は、画面遷移のための巨大なAPIではなく、疎結合な最小限のAPI群で構成されている点にあります。これらを組み合わせることで、複雑な機能も構築可能です。アプリごとのニーズに合わせて最適な組み合わせを自ら定義することこそが、Nav3を最も有効に活用する方法だと解釈しました。
 
-Nav3のそれぞれのAPIとそれに対して何を意識するかは、[Nav3は状態の保持と描画を分けて考えると設計しやすい](https://qiita.com/Daiji256/items/c9cb9d8279c9bad687cc)にて紹介しています。
+具体的なAPIの使い分けや設計のポイントについては、[Nav3は状態の保持と描画を分けて考えると設計しやすい](https://qiita.com/Daiji256/items/c9cb9d8279c9bad687cc)で紹介しています。
 
-- **メリット:** あらゆる要件に対応できる
-- **デメリット:** アプリごとに画面遷移を設計する必要があり、遷移の設計とドメインが密結合になる
+- **メリット:** アプリ固有の複雑な要件に対して、オーバーヘッドのない最適な実装が可能になる
+- **デメリット:** アプリごとに遷移ロジックを設計する必要があり、設計とドメインが密結合になる
 
 ## まとめ
 
-Nav3による画面遷移は、実装者が自由に設計できます。設計に汎用性を持たせることもできますが、Nav3を最大限に活用するにはアプリごとにそれぞれの設計を考えるとよいです。
+Nav3による画面遷移は、実装者がその設計を自由にコントロールできます。汎用的な画面遷移APIを定義することも可能ですが、Nav3を最大限に活用するには、アプリそれぞれの要件に適した設計するとよいです。
 
 ## 参考文献
 
