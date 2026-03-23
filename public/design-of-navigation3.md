@@ -1,7 +1,11 @@
 ---
-title: newArticle001
+title: Nav3による画面遷移の設計をどう考えるか
 tags:
-  - ''
+  - Android
+  - Kotlin
+  - Compose
+  - JetpackCompose
+  - Navigation3
 private: false
 updated_at: ''
 id: null
@@ -9,8 +13,6 @@ organization_url_name: null
 slide: false
 ignorePublish: false
 ---
-
-# Nav3による画面遷移の設計をどう考えるか
 
 ## はじめに
 
