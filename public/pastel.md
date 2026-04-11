@@ -2,13 +2,13 @@
 title: Material Youを活かした独自カラースキームの作り方
 tags:
   - Android
+  - UI
+  - MaterialDesign
   - Compose
   - JetpackCompose
-  - MaterialDesign
-  - UI
 private: false
-updated_at: ''
-id: null
+updated_at: '2026-04-11T18:19:50+09:00'
+id: b2e609a5ff56e80bd96a
 organization_url_name: null
 slide: false
 ignorePublish: false
