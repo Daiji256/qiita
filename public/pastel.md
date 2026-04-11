@@ -1,5 +1,5 @@
 ---
-title: Material YouとHCT色空間を用いた独自のカラースキームの作成
+title: Material Youを活かした独自カラースキームの作り方
 tags:
   - Android
   - Compose
