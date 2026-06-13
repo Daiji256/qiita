@@ -45,9 +45,9 @@ Androidアプリをリリース・アップデートしようとした際、Goog
 
 ## 必要な設定
 
-NDKの用意ができたら、以下のように `app/build.gradle.kts` に `ndkVersion` と `debugSymbolLevel`[^debug-symbol-sevel-full-symbol_table] を設定することで、ビルドされる `.aab` ファイル内にデバッグシンボルが同梱されるようになります。
+NDKの用意ができたら、以下のように `app/build.gradle.kts` に `ndkVersion` と `debugSymbolLevel`[^debug-symbol-level-full-symbol_table] を設定することで、ビルドされる `.aab` ファイル内にデバッグシンボルが同梱されるようになります。
 
-[^debug-symbol-sevel-full-symbol_table]: `debugSymbolLevel` には `"SYMBOL_TABLE"` も指定可能ですが、Play Consoleでの詳細な解析には、関数名だけでなく詳細な行番号情報なども保持する `"FULL"` の指定が推奨されています。ただし、`"FULL"` を指定すると `.aab` のファイルサイズが `"SYMBOL_TABLE"` よりも大きくなります。
+[^debug-symbol-level-full-symbol_table]: `debugSymbolLevel` には `"SYMBOL_TABLE"` も指定可能ですが、Play Consoleでの詳細な解析には、関数名だけでなく詳細な行番号情報なども保持する `"FULL"` の指定が推奨されています。ただし、`"FULL"` を指定すると `.aab` のファイルサイズが `"SYMBOL_TABLE"` よりも大きくなります。
 
 注意するべき点として、`ndkVersion` の明示的な指定が必要です。`debugSymbolLevel` だけを設定しても、ビルド時にデバッグシンボルが生成されても、`.aab` には含まれませんでした。
 
