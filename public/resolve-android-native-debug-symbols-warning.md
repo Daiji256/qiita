@@ -22,7 +22,7 @@ Androidアプリをリリース・アップデートしようとした際、Goog
 
 > この App Bundle にはネイティブ コードが含まれ、デバッグ シンボルがアップロードされていません。クラッシュや ANR を簡単に分析、デバッグできるよう、シンボル ファイルをアップロードすることをおすすめします。
 
-![TODO](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/699841/7247fe64-8ede-45c0-abcb-e0403dd466c9.png)
+![Google Play Consoleに表示されるデバッグシンボル欠如の警告](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/699841/7247fe64-8ede-45c0-abcb-e0403dd466c9.png)
 
 ## デバッグシンボルとは何か？
 
@@ -41,7 +41,7 @@ Androidアプリをリリース・アップデートしようとした際、Goog
 3. インストールしたいNDKのバージョンにチェックを入れる
 4. Applyする
 
-![TODO](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/699841/7536cecc-8982-437d-a0fd-a32ed5716a01.png)
+![Android StudioのSDK ManagerでのNDKインストール手順](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/699841/7536cecc-8982-437d-a0fd-a32ed5716a01.png)
 
 ## 必要な設定
 
@@ -69,7 +69,7 @@ android {
 
 実際にこの `.aab` ファイルをPlay Consoleにアップロードしてみましょう。警告が消えるだけでなく、App BundleのDownloadsタブを確認すると、AssetsにNative debug symbolsが追加されています。
 
-![TODO](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/699841/e41a31f2-209d-43eb-a968-8b4fbcdafbc0.png)
+![Google Play ConsoleのApp Bundle詳細画面でNative debug symbolsが追加された](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/699841/e41a31f2-209d-43eb-a968-8b4fbcdafbc0.png)
 
 ## まとめ
 
