@@ -41,7 +41,7 @@ Androidアプリをリリース・アップデートしようとした際、Goog
 3. インストールしたいNDKのバージョンにチェックを入れる
 4. Applyする
 
-![TODO](※ここにAndroid StudioのSDK Managerのスクリーンショットを挿入してください)
+![TODO](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/699841/7536cecc-8982-437d-a0fd-a32ed5716a01.png)
 
 ## 必要な設定
 
