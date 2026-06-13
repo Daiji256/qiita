@@ -26,33 +26,15 @@ Androidアプリをリリース・アップデートしようとした際、Goog
 
 ## デバッグシンボルとは何か？
 
-ソースコードをコンパイルしてバイナリ（マシン語）を作成する過程で、ファイルサイズを削減や最適化等により、変数名や関数名のようなソースコードの情報（デバッグ情報）が削除されます。
+ソースコードをコンパイルしてバイナリ（マシン語）を作成する過程で、ファイルサイズの削減や最適化等により、変数名や関数名のようなソースコードの情報（デバッグ情報）が削除されます。
 
 デバッグシンボルとは、このバイナリとソースコードを紐づけるためのマッピングデータです。
 
 これがないと、そのバイナリ内での処理中にクラッシュが発生した際に、Play Console上からはどのようなエラーが起きたかの特定が困難になります。
 
-## 必要な設定
-
-以下のように `app/build.gradle.kts` に `ndkVersion` と `debugSymbolLevel` を設定することで、ビルドされる `.aab` ファイル内にデバッグシンボルが同梱されるようになります。
-
-注意するべき点として、`ndkVersion` の明示的な指定が必要です。`debugSymbolLevel` だけを設定しても、ビルド時にデバッグシンボルが生成されても、`.aab` には含まれまれませんでした。
-
-```kotlin
-android {
-    ndkVersion = "27.3.13750724" // 執筆時点での最新LTSバージョン
-
-    buildTypes {
-        release {
-            ndk.debugSymbolLevel = "FULL"
-        }
-    }
-}
-```
-
 ## NDKをインストールする方法
 
-以下の手順によりAndroid StudioでNDKをインストールできます。
+まずは事前準備として、以下の手順によりAndroid StudioでNDKをインストールしておきます。
 
 1. メニューからTools > SDK Managerを選択する
 2. SDK Toolsタブを開き、Show Package Detailsにチェックを入れる
@@ -60,6 +42,26 @@ android {
 4. Applyする
 
 ![TODO](※ここにAndroid StudioのSDK Managerのスクリーンショットを挿入してください)
+
+## 必要な設定
+
+NDKの用意ができたら、以下のように `app/build.gradle.kts` に `ndkVersion` と `debugSymbolLevel`[^debug-symbol-sevel-full-symbol_table] を設定することで、ビルドされる `.aab` ファイル内にデバッグシンボルが同梱されるようになります。
+
+[^debug-symbol-sevel-full-symbol_table]: `debugSymbolLevel` には `"SYMBOL_TABLE"` も指定可能ですが、Play Consoleでの詳細な解析には、関数名だけでなく詳細な行番号情報なども保持する `"FULL"` の指定が推奨されています。ただし、`"FULL"` を指定すると `.aab` のファイルサイズが `"SYMBOL_TABLE"` よりも大きくなります。
+
+注意するべき点として、`ndkVersion` の明示的な指定が必要です。`debugSymbolLevel` だけを設定しても、ビルド時にデバッグシンボルが生成されても、`.aab` には含まれませんでした。
+
+```kotlin
+android {
+    ndkVersion = "27.3.13750724" // 執筆時点での最新LTSバージョン
+
+    buildTypes {
+        release {
+            ndk.debugSymbolLevel = "FULL" // もしくは "SYMBOL_TABLE"
+        }
+    }
+}
+```
 
 ## 成功の確認方法
 
@@ -71,8 +73,8 @@ android {
 
 ## まとめ
 
-- デバッグシンボルはクラッシュやANRの調査・分析に役にたつデータ
-- `.aab` にデバッグシンボルを同梱するには、`app/build.gradle.kts` に `ndkVersion` と `ndk.debugSymbolLevel = "FULL"` を設定する。
+- デバッグシンボルはクラッシュやANRの調査・分析に役に立つデータ
+- `.aab` にデバッグシンボルを同梱するには、`app/build.gradle.kts` に `ndkVersion` と `ndk.debugSymbolLevel` を設定する
 
 ## 参考文献
 
