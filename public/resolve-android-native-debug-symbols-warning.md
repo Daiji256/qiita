@@ -49,7 +49,7 @@ NDKの用意ができたら、以下のように `app/build.gradle.kts` に `ndk
 
 [^debug-symbol-level-full-symbol_table]: `debugSymbolLevel` には `"SYMBOL_TABLE"` も指定可能ですが、Play Consoleでの詳細な解析には、関数名だけでなく詳細な行番号情報なども保持する `"FULL"` の指定が推奨されています。ただし、`"FULL"` を指定すると `.aab` のファイルサイズが `"SYMBOL_TABLE"` よりも大きくなります。
 
-注意するべき点として、`ndkVersion` の明示的な指定が必要です。`debugSymbolLevel` だけを設定しても、ビルド時にデバッグシンボルが生成されても、`.aab` には含まれませんでした。
+注意するべき点として、`ndkVersion` の明示的な指定が必要です。`debugSymbolLevel` だけを設定した場合、ビルド時にデバッグシンボル自体は生成されるものの、`.aab` には含まれませんでした。
 
 ```kotlin
 android {
