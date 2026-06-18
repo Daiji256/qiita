@@ -2,13 +2,13 @@
 title: chws-toolにより任意のフォントをchws対応にする
 tags:
   - Android
-  - Typography
-  - Font
-  - chws
+  - font
+  - typography
   - 約物
+  - chws
 private: false
-updated_at: ''
-id: null
+updated_at: '2026-06-18T23:38:20+09:00'
+id: 69cfafbd3b62e7d45319
 organization_url_name: null
 slide: false
 ignorePublish: false
