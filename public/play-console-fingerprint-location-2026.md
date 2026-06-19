@@ -2,13 +2,13 @@
 title: Play Console でアプリ署名のフィンガープリントを確認する（2026年）
 tags:
   - Android
-  - GooglePlayConsole
   - fingerprint
-  - 署名
   - keystore
+  - 署名
+  - GooglePlayConsole
 private: false
-updated_at: ''
-id: null
+updated_at: '2026-06-19T21:25:36+09:00'
+id: dfcbc6972c31558657e7
 organization_url_name: null
 slide: false
 ignorePublish: false
