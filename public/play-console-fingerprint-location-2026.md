@@ -1,5 +1,5 @@
 ---
-title: Play Console でアプリ署名のフィンガープリントを確認する（2026年）
+title: Play Consoleでアプリ署名のフィンガープリントを確認する（2026年）
 tags:
   - Android
   - fingerprint
