@@ -1,0 +1,28 @@
+---
+title: Play Console でアプリ署名のフィンガープリントを確認する（2026年）
+tags:
+  - Android
+  - GooglePlayConsole
+  - fingerprint
+  - 署名
+  - keystore
+private: false
+updated_at: ''
+id: null
+organization_url_name: null
+slide: false
+ignorePublish: false
+---
+
+最近の[Play Console](https://play.google.com/console)のUI変更により、アプリ署名のフィンガープリント（SHA-1 / SHA-256）を確認する場所が変わりました。
+
+2026年6月19日現在は、以下の手順でフィンガープリントを確認できます：
+
+1. サイドメニューから **Google Play による保護（Protected with Play）** を選択する
+2. **Google Play ストアの保護（Play Store protection）** の項目を展開する
+3. **アプリ署名鍵の保護（Protect app signing key）** の右側にある **Play アプリ署名の管理（Manage Play app signing）** ボタンをクリックする
+4. **遷移先の アプリの署名（App signing）** ページで各種フィンガープリントを確認できる
+
+![Google Play による保護（Protected with Play）にてGoogle Playストアの保護（Play Store protection）が展開されている](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/699841/2751248c-0842-4fca-9799-e687d7af4518.png)
+
+![アプリの署名（App signing）にてフィンガープリントが表示されている](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/699841/e01bf3f9-ede4-4d72-aace-599e9095c092.png)
