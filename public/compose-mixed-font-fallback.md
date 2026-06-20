@@ -38,6 +38,7 @@ import android.graphics.Typeface as NativeTypeface
 import android.graphics.fonts.Font as NativeFont
 import android.graphics.fonts.FontFamily as NativeFontFamily
 
+@RequiresApi(Build.VERSION_CODES.Q)
 val MyFontFamily = FontFamily(
     fonts = listOf(
         MyFont(weight = FontWeight.Normal),
@@ -45,6 +46,7 @@ val MyFontFamily = FontFamily(
     ),
 )
 
+@RequiresApi(Build.VERSION_CODES.Q)
 private class MyFont(
     override val weight: FontWeight,
 ) : AndroidFont(
@@ -103,5 +105,5 @@ private class MyFont(
 ## 参考文献
 
 - [Typeface.CustomFallbackBuilder | Android Developers](https://developer.android.com/reference/kotlin/android/graphics/Typeface.CustomFallbackBuilder)
-- [AndroidFon | Android Developers](https://developer.android.com/reference/kotlin/androidx/compose/ui/text/font/AndroidFont)
+- [AndroidFont | Android Developers](https://developer.android.com/reference/kotlin/androidx/compose/ui/text/font/AndroidFont)
 - [Google Fonts](https://fonts.google.com/)
