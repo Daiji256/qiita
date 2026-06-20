@@ -2,11 +2,11 @@
 title: Explicit Backing Fieldsの仕組みと注意点（Kotlin 2.4.0）
 tags:
   - Kotlin
+  - Stateflow
   - ExplicitBackingFields
-  - StateFlow
 private: false
-updated_at: ''
-id: null
+updated_at: '2026-06-20T23:58:15+09:00'
+id: 4dbf9098eb060ae10d18
 organization_url_name: null
 slide: false
 ignorePublish: false
