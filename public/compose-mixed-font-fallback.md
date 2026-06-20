@@ -16,23 +16,21 @@ ignorePublish: false
 
 ## はじめに
 
-タイポグラフィを考えるとき「アルファベットはフォントAを、日本語はフォントBを表示したい」という和欧混植の要望があることもあるでしょう。Jetpack Composeにより開発しているAndroidアプリにおいても、この要望を叶えたいことがあります。
+タイポグラフィを考えるとき「アルファベットはフォントAを、日本語はフォントBを表示したい」という和欧混植の要望もあるでしょう。Jetpack Composeで開発しているAndroidアプリでも、この要望に応えたい場面があります。
 
-`FontFamily(Font(欧文), Font(和文))` のようにいくつかの `Font` をリスト形式で指定したところで、文字単位でフォールバックされず意図した混植にはなりません。
+しかし、`FontFamily(Font(欧文), Font(和文))` のようにいくつかの `Font` をリスト形式で指定するだけでは、文字（グリフ）単位できれいにフォールバックされず、意図した混植にはなりません。
 
 この記事では、AndroidネイティブのAPIを活用し、Compose上で文字単位のフォールバックを実現する方法を紹介します。
 
 ## `Typeface.CustomFallbackBuilder` と `AndroidFont`
 
-Android 10（API 29）で追加された `Typeface.CustomFallbackBuilder` は、「最初のフォントに文字がなければ次のフォントを試す」という文字単位のフォールバック実現できるAPIです。
+Android 10（API 29）で追加された `Typeface.CustomFallbackBuilder` は、「最初のフォントに文字がなければ次のフォントを試す」という文字単位のフォールバックを実現できるAPIです。
 
-これをJetpack Composeの `AndroidFont` に変換することで、文字単位でフォールバックする `Font` / `FontFamily` を構築できます。
+これをJetpack Composeの `AndroidFont` で扱うことで、文字単位でフォールバックする `FontFamily` を構築できます。
 
 ## 実装例
 
-ここでは、欧文に「Quicksand」、和文に「Zen Maru Gothic」を表示するための実装を紹介します。万が一の未対応文字にはシステム標準フォントを割り当てています。
-
-実装例から分かるとおり、バリアブルフォント・非バリアブルフォントともに対応しています。
+ここでは、欧文に「Quicksand」、和文に「Zen Maru Gothic」を表示するための実装を紹介します。バリアブル（可変）フォント・静的フォントのどちらにも対応した形になっています。万が一の未対応文字にはシステム標準フォントを割り当てています。
 
 ```kotlin
 // ...
@@ -98,9 +96,9 @@ private class MyFont(
 
 ## まとめ
 
-- 安直に `FontFamily` に複数の `Font` を指定しても、文字単位のフォールバックは実現できない
-- Android 10（API 29）で追加された `Typeface.CustomFallbackBuilder` により、文字単位のフォールバックが実現できる
-- `Typeface` を `AndroidFont` に変換することで、フォールバックの機能をComposeでも利用できる
+- 単に `FontFamily` へ複数の `Font` を指定しても、文字単位のフォールバックは実現できない
+- Android 10（API 29）で追加された `Typeface.CustomFallbackBuilder` を使えば、文字単位のフォールバックが実現できる
+- `Typeface` を `AndroidFont` でラップすることで、フォールバックの機能をComposeでも利用できる
 
 ## 参考文献
 
