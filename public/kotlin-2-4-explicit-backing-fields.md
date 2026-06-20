@@ -1,7 +1,9 @@
 ---
 title: newArticle001
 tags:
-  - ''
+  - Kotlin
+  - ExplicitBackingFields
+  - StateFlow
 private: false
 updated_at: ''
 id: null
@@ -10,9 +12,17 @@ slide: false
 ignorePublish: false
 ---
 
-Kotlin 2.4.0でstableになった（compiler argsに何もつかしなくて良くなった）Explicit Backing Fieldsについて紹介する
+# Explicit Backing Fieldsの仕組みと注意点（Kotlin 2.4.0）
 
-class内部でmutableとして扱うが、公開時はmutableとして扱いたくない時などは、`_state` のような実装パターンをしていたが、Explicit Backing Fieldsにより `field` で実現できるようになる：
+Kotlin 2.4.0からexplicit backing fieldsがstableになりました[^no-args-ebf]。本記事では、これまでの「よくあるコード」がどう変わるのか、その仕組みと注意点について紹介します。
+
+[^no-args-ebf]: コンパイラオプションの `-Xexplicit-backing-fields` が不要になりました。
+
+## 今までの書き方とこれからの書き方
+
+クラス内部ではmutable（可変）として扱うものの、外部に公開する際はimmutable（不変）として扱いたい場合、これまでは `_state` のようなプライベートプロパティを用意する実装パターンが一般的でした。
+
+Explicit backing fieldsの登場により、これを `field` キーワードを用いて1つのプロパティで簡潔に表現できるようになります。
 
 ```kotlin
 object Before {
@@ -26,11 +36,15 @@ object After {
 }
 ```
 
-`field` を使うことで内部ではsmart castにより、`MutableStateFlow` として扱える（smart castと呼んでいいのか自信がない、要調査）
+## どのように便利なのか？
 
-公開されている `state` が `StateFlow` のように見えるだけで、インスタンスとしては同じなので、`After.state is MutableStateFlow<String>` は `true` になることに注意
+`After` のように書くことで、外部からは単なる読み取り専用の `StateFlow<String>` として見えますが、クラスの内部（宣言されたスコープ内）では、自動スマートキャスト（automatic smart cast）により、`MutableStateFlow` として扱うことができます。これにより、不要な `_state` プロパティの定義（ボイラープレート）を減らし、コードをすっきりと保つことができます。
 
-つまり、以下の実装のように `login` を呼び出さずに、無理やり `value` を書き換えることができる：
+## どのような注意が必要か？
+
+コードが簡潔になる一方で、引き続き注意する点もあります。それは、公開されている `state` が `StateFlow` のように見えているだけで、インスタンスとしては内部の `MutableStateFlow` と全く同じものであるという点です。
+
+つまり、`After.state is MutableStateFlow<String>` は `true` になります。そのため、以下のように `login()` メソッドを介さずに、外部から無理やりキャストして値を書き換えることができます。
 
 ```kotlin
 object UserStore {
@@ -46,7 +60,11 @@ object UserStore {
 println("user: ${UserStore.user.value}") // user: Bob
 ```
 
-外部から確実に操作できないようにするためには、別のimmutableなインスタンスに変換して公開するしかないため、依然として `_user` のようなパターンが必要で、Explicit Backing Fieldsは使えない：
+外部から確実に操作できないようにするためには、単に「型として見えなくする」だけではなく、別のimmutable（不変）なオブジェクトに変換して公開するしかありません。
+
+したがって、以下のように `asStateFlow()` を用いて別の読み取り専用オブジェクトを生成する用途では、依然として `_user` のような従来パターンが必要であり、explicit backing fieldsは利用できません。
+
+このような異なるオブジェクトに変換したい場合は、`StateFlow` に限らずexplicit backing fieldsは利用できません。
 
 ```kotlin
 object UserStore {
@@ -59,6 +77,13 @@ object UserStore {
 }
 ```
 
-実装例の `StateFlow` / `MutableStateFlow` に限らず、`List` などにおいても同様の問題がある
+## まとめ
 
-チーム内で扱うコードなどでは、そこまで気にする必要はないためExplicit Backing Fieldsは役立つだろうが、ライブラリ等で第三者に公開する場合などでは、immutableなものに変換する方が安全なのは変わらない
+TODO: 箇条書きで3つ程度
+
+## 参考文献
+
+- [Explicit backing fields](https://kotlinlang.org/docs/properties.html#explicit-backing-fields)
+- [KEEP-0430-explicit-backing-fields.md](https://github.com/Kotlin/KEEP/blob/main/proposals/KEEP-0430-explicit-backing-fields.md)
+- [What's new in Kotlin 2.4.0](https://kotlinlang.org/docs/whatsnew24.html)
+- [What's new in Kotlin 2.3.0](https://kotlinlang.org/docs/whatsnew23.html)
