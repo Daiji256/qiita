@@ -1,5 +1,5 @@
 ---
-title: newArticle001
+title: Explicit Backing Fieldsの仕組みと注意点（Kotlin 2.4.0）
 tags:
   - Kotlin
   - ExplicitBackingFields
@@ -12,15 +12,15 @@ slide: false
 ignorePublish: false
 ---
 
-# Explicit Backing Fieldsの仕組みと注意点（Kotlin 2.4.0）
+## はじめに
 
 Kotlin 2.4.0からexplicit backing fieldsがstableになりました[^no-args-ebf]。本記事では、これまでの「よくあるコード」がどう変わるのか、その仕組みと注意点について紹介します。
 
-[^no-args-ebf]: コンパイラオプションの `-Xexplicit-backing-fields` が不要になりました。
+[^no-args-ebf]: `-Xexplicit-backing-fields` が不要になりました。
 
 ## 今までの書き方とこれからの書き方
 
-クラス内部ではmutable（可変）として扱うものの、外部に公開する際はimmutable（不変）として扱いたい場合、これまでは `_state` のようなプライベートプロパティを用意する実装パターンが一般的でした。
+`class` / `object` 内部ではmutable（可変）として扱うものの、外部に公開する際はimmutable（不変）として扱いたい場合、これまでは `_state` のようなprivateなpropertyを用意する実装パターンが一般的でした。
 
 Explicit backing fieldsの登場により、これを `field` キーワードを用いて1つのプロパティで簡潔に表現できるようになります。
 
@@ -29,7 +29,9 @@ object Before {
     private val _state = MutableStateFlow("initial")
     val state: StateFlow<String> = _state
 }
+```
 
+```kotlin
 object After {
     val state: StateFlow<String>
         field = MutableStateFlow("initial")
@@ -38,7 +40,7 @@ object After {
 
 ## どのように便利なのか？
 
-`After` のように書くことで、外部からは単なる読み取り専用の `StateFlow<String>` として見えますが、クラスの内部（宣言されたスコープ内）では、自動スマートキャスト（automatic smart cast）により、`MutableStateFlow` として扱うことができます。これにより、不要な `_state` プロパティの定義（ボイラープレート）を減らし、コードをすっきりと保つことができます。
+`After` のように書くことで、外部からは単なる読み取り専用の `StateFlow<String>` として見えますが、宣言されたスコープ内では、自動スマートキャスト（automatic smart cast）により、`MutableStateFlow` として扱うことができます。これにより、不要な `_state` の定義を減らし、コードをすっきりと保つことができます。
 
 ## どのような注意が必要か？
 
@@ -64,7 +66,7 @@ println("user: ${UserStore.user.value}") // user: Bob
 
 したがって、以下のように `asStateFlow()` を用いて別の読み取り専用オブジェクトを生成する用途では、依然として `_user` のような従来パターンが必要であり、explicit backing fieldsは利用できません。
 
-このような異なるオブジェクトに変換したい場合は、`StateFlow` に限らずexplicit backing fieldsは利用できません。
+この問題は `StateFlow` に限らず `List` などでも同様であり、異なるオブジェクトに変換して公開したい場合は、explicit backing fieldsは利用できません。
 
 ```kotlin
 object UserStore {
@@ -79,7 +81,9 @@ object UserStore {
 
 ## まとめ
 
-TODO: 箇条書きで3つ程度
+- `field` キーワードを使うことで、`_state` といったprivateなpropertyを定義する必要がなくなり、コードが簡潔になる
+- スマートキャストにより実現されているため、スコープ内外で同一のオブジェクトが参照される
+- 外部に公開するさいに、厳密にimmutableにする必要がある場合は、`asStateFlow()` などを用いて従来通りに `_state` などが必要になる
 
 ## 参考文献
 
