@@ -104,5 +104,6 @@ private class MyFont(
 
 ## 参考文献
 
-- https://developer.android.com/reference/kotlin/android/graphics/Typeface.CustomFallbackBuilder
-- https://fonts.google.com/
+- [Typeface.CustomFallbackBuilder | Android Developers](https://developer.android.com/reference/kotlin/android/graphics/Typeface.CustomFallbackBuilder)
+- [AndroidFon | Android Developers](https://developer.android.com/reference/kotlin/androidx/compose/ui/text/font/AndroidFont)
+- [Google Fonts](https://fonts.google.com/)
