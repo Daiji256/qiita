@@ -30,7 +30,7 @@ Jetpack Navigation 3（Nav3）の1.2.0-alpha02[^1.2.0-alpha04]にて、画面間
 
 ### `NavEntryDecorator` のセットアップ
 
-`NavDisplay` などのセットアップ時の `entryDecorators` に `rememberResultEventBusNavEntryDecorator()` を追加します。
+`NavDisplay` などのセットアップ時、`entryDecorators` に `rememberResultEventBusNavEntryDecorator()` を追加します。
 
 ```kotlin
 entryDecorators = listOf(
@@ -39,7 +39,7 @@ entryDecorators = listOf(
 )
 ```
 
-### 結果として送受信するデータの型の定義
+### 結果として送受信するデータ型の定義
 
 結果として送受信するデータの型を定義します。
 
@@ -51,7 +51,7 @@ data class FooResult(
 
 ### 受信側の実装
 
-結果の受け取りには `ResultEffect` もしくは `conflateAsState` を使用します。`ResultEffect` では、結果をラムダで受け取ることができます。`conflateAsState` は最新の結果を `State` に格納します。
+結果の受け取りには `ResultEffect` もしくは `conflateAsState` を使用します。`ResultEffect` では、結果をラムダで受け取ることができます。`conflateAsState` は最新の結果を `State` として保持します。
 
 一度きりのイベント（スナックバーの表示など）として消費する場合は `ResultEffect` を、UIの状態として保持し続けたい場合は `conflateAsState` を利用すると良いでしょう。
 
@@ -69,7 +69,7 @@ val result by LocalResultEventBus.current.conflateAsState(
 
 ### 送信側の実装
 
-`ResultEventBus` の `sendResult()` で結果を送信します。`ResultEventBus` のインスタンスは `LocalResultEventBus` で取得できます。
+`ResultEventBus` の `sendResult()` で結果を送信します。`ResultEventBus` のインスタンスは `LocalResultEventBus.current` で取得できます。
 
 ```kotlin
 val resultEventBus = LocalResultEventBus.current
@@ -78,9 +78,9 @@ resultEventBus.sendResult(result = FooResult(value = "result"))
 
 ## `ResultEventBus` の仕組み
 
-`ResultEventBus` の実装は非常にシンプルです。キーに紐づくように複数の `Channel` を保持しているだけです。
+`ResultEventBus` の実装は非常にシンプルです。内部では、キーに紐づける形で複数の `Channel` を保持しています。
 
-送信されたデータはこの `Channel` に保持され、`ResultEffect` や `conflateAsState` は `getResultFlow` を経由して結果を収集します。
+送信されたデータはこの `Channel` に保持され、`ResultEffect` や `conflateAsState` は `getResultFlow()` を経由して結果を収集します。
 
 ```kotlin
 public class ResultEventBus {
@@ -106,9 +106,9 @@ public class ResultEventBus {
 
 ### 自動でクリーンアップされない（メモリリークの懸念）
 
-`ResultEventBusNavEntryDecorator` の実装から分かる通り、全ての `entry` で同一の `ResultEventBus` を参照しているだけです。ナビゲーションのポップに連動することもありません。
+`ResultEventBusNavEntryDecorator` の実装から分かる通り、全ての `entry` が同一の `ResultEventBus` インスタンスを参照しています。このインスタンスはナビゲーションのポップ（戻る操作）に連動して自動的に破棄されることはありません。
 
-もう受け取ることがないとしても、明示的に `removeResult()` を呼び出さない限り、送受信するための `Channel` は残り続けてしまいます。
+そのため、今後受け取る予定のない結果であっても、明示的に `removeResult()` を呼び出さない限り、送受信用の `Channel` はメモリ上に残り続けてしまいます。
 
 ```kotlin
 public class ResultEventBusNavEntryDecorator<T : Any>(
@@ -122,31 +122,29 @@ public class ResultEventBusNavEntryDecorator<T : Any>(
     )
 ```
 
-### Activity再生成時のデータ消失に対応しない
+### Activity再生成時のデータ消失に対応していない
 
-自動で破棄されない性質により、A → B → Cのように深く遷移したとしても、Cで送信した結果を、Bを経由せずにAで受け取ることができます。また、Aで送信した結果をBで受け取ることもできます。
+「自動で破棄されない性質」の副産物として、A → B → Cのように深く遷移した状態でCから送信した結果を、Bを経由せずにAで受け取ったり、逆にAから送信した結果をBで受け取ったりと、柔軟な通信が可能です。
 
-しかし、結果の送信と受信の間に間隔が開くことで、問題もあります。例えば、
+しかし、オンメモリで保持されているだけであるため、結果の送信から受信までに間隔が空くケースでは以下の問題が発生します。
 
 1. Cで結果を送信し、Bに戻る
-2. Bに滞在している間に、Activityが再生成される
-3. Aに戻っても結果を受け取れない
+2. Bに滞在している間に、構成変更などによりActivityが再生成される
+3. Aに戻っても、メモリ上のデータが消失しているため結果を受け取れない
 
-ということがあります。これは、`ResultEventBus` がActivity再生成時のデータ消失に対応していないために起こることです。
+このように、`ResultEventBus` はActivity再生成時のデータ保存・復元（SavedState）の仕組みに対応していません。そのため、イベント送受信のタイミングが離れる場合は、開発者自身が適切に状態を管理する必要があります。
 
-また、イベントの送受信のタイミングが自由であることから、開発者自身がそれらのタイミングを正しく管理しなければなりません。
+### Fan-out形式で分配される仕様
 
-### Fan-out形式で分配
+同じ型の結果を監視する `ResultEffect` や `conflateAsState` が同時に複数存在する場合、`Channel` の仕様により、イベントはFan-out形式で分配されます。
 
-同じ型の結果を監視する `ResultEffect` や `conflateAsState` が複数同時に存在する場合、`Channel` の仕様によりFan-out形式でイベントが分配されます。
-
-つまり、送信された1つの結果をすべてのオブザーバーが受け取れるわけではなく、どれか1つにしか到達しません。必ずしも最新の結果を受信できるとは限らない点に注意が必要です。
+つまり、送信された1つの結果を「すべてのオブザーバー」が受け取れるわけではなく、イベントごとにどれか1つのオブザーバーにしか到達しません。これにより、意図した画面（コンポーネント）で結果を受信し損ねる可能性がある点に注意が必要です。
 
 ## まとめ
 
 - Nav3の `ResultEventBus` は結果の受け渡しを簡潔かつ型安全に実現する便利な仕組み
-- `Channel` による保持のため、Activity再生成時のデータ消失や不要な結果の削除などのメモリ管理やライフサイクルには注意が必要
-- イベントのライフサイクルや多重受信がないようにするなど、実装時に注意する必要がある
+- `Channel` による保持のため、不要な結果の削除（メモリ管理）やActivity再生成時のデータ消失には注意が必要
+- 多重監視によって意図した画面にイベントが届かなくなる事態を防ぐなど、ライフサイクルと通信の仕様を理解した実装が求められる
 
 ## 参考文献
 
