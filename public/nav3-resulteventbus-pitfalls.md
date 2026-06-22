@@ -7,8 +7,8 @@ tags:
   - Navigation3
   - ResultEventBus
 private: false
-updated_at: ''
-id: null
+updated_at: '2026-06-22T21:17:32+09:00'
+id: ad298f5a7384136eb6dd
 organization_url_name: null
 slide: false
 ignorePublish: false
