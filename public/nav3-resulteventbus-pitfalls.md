@@ -136,7 +136,7 @@ public class ResultEventBusNavEntryDecorator<T : Any>(
 
 また、イベントの送受信のタイミングが自由であることから、開発者自身がそれらのタイミングを正しく管理しなければなりません。
 
-### Fan-outによるイベント消費の奪い合い
+### Fan-out形式で分配
 
 同じ型の結果を監視する `ResultEffect` や `conflateAsState` が複数同時に存在する場合、`Channel` の仕様によりFan-out形式でイベントが分配されます。
 
