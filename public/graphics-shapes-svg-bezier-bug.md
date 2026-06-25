@@ -24,35 +24,37 @@ ignorePublish: false
 
 ## 事象・原因
 
-`SvgPathParser.parseFeatures()` を使ってSVGパス文字列から `features` を取得し、それを `RoundedPolygon` に渡して描画してみたところ、形状が歪んでしまう現象が発生します。
+`SvgPathParser.parseFeatures()` を使ってSVGパス文字列から `features` を取得し、それを `RoundedPolygon` に変換して描画したところ、本来の形状より歪んでしまう現象が発生します。
 
-SVGパスに含まれる2次ベジェ曲線（`q`コマンドなど）を、ライブラリ内部で3次ベジェ曲線に変換して扱う際は2/3の係数が必要です。しかし、[ソースコード](https://github.com/androidx/androidx/blob/e6d33dd5d0a60001a5784d84123b05308d35f410/graphics/graphics-shapes/src/commonMain/kotlin/androidx/graphics/shapes/SvgPathParser.kt)を確認したところ、2次ベジェ曲線の制御点が、そのまま3次ベジェの2つの制御点として単純にコピーされていました：
+SVGパスに含まれる2次ベジェ曲線（`q`コマンドなど）を、ライブラリ内部で3次ベジェ曲線に変換して扱う際は、2/3の係数を用いた座標計算が必要です。しかし、[ソースコード](https://github.com/androidx/androidx/blob/e6d33dd5d0a60001a5784d84123b05308d35f410/graphics/graphics-shapes/src/commonMain/kotlin/androidx/graphics/shapes/SvgPathParser.kt)を確認したところ、2次ベジェ曲線の制御点がそのまま3次ベジェの2つの制御点として単純にコピーされていました：
 
 ```kotlin
 'q' -> addCurveWith(command.xy(0, 1), command.xy(0, 1), command.xy(2, 3))
 ```
 
-|パスが歪んでしまった形状の例|期待している形状の例|
-|--|--|
-|![actual_distorted_curves.png](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/699841/a9317fcd-689a-4e04-a11b-c83209ed09eb.png)|![expected_correct_curves.png](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/699841/d6d70811-a146-4b8e-beaf-51d922afa814.png)|
+| パスが歪んでしまった形状の例 | 期待している形状の例 |
+| -- | -- |
+| ![actual_distorted_curves.png](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/699841/a9317fcd-689a-4e04-a11b-c83209ed09eb.png) | ![expected_correct_curves.png](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/699841/d6d70811-a146-4b8e-beaf-51d922afa814.png) |
 
 ## 解決方法
 
-`SvgPathParser.parseFeatures()` は、リリースされるアプリの本番環境（実行時）で動的に実行することは推奨されておらず、あくまでも開発中やビルド時のみの利用が想定されています。そのため、ここでは `Feature` に対してパッチを当てて補正することで解決をはかります。
+`SvgPathParser.parseFeatures()` は、リリースされるアプリの本番環境（実行時）で動的に実行することは推奨されておらず、あくまでも開発中やビルド時のみの利用が想定されています。そのため、ここでは取得した `Feature` に直接パッチを当てて補正することで解決をはかります。
 
-パース結果として得られた `Feature` のベジェ曲線を保持する `Cubic` クラスをチェックします。2つの制御点が完全に同一座標にある場合、単純コピーされた2次ベジェ曲線と判断し、2/3の係数がついた制御点になるよう再計算・上書きします：
+パース結果として得られた `Feature` の中から、ベジェ曲線を保持する `Cubic` クラスをチェックします。2つの制御点が完全に同一座標にある場合、単純コピーされた2次ベジェ曲線と判断し、本来の2/3の係数がついた制御点になるよう再計算・上書きします：
 
- ```kotlin
+```kotlin
 val features = SvgPathParser.parseFeatures(
     svgPath = "...",
 ).map { feature ->
     val patchedCubics = feature.cubics.map { cubic ->
+        // 2つの制御点が同一座標の場合、単純コピーされた2次ベジェ曲線とみなす
         if (cubic.control0X == cubic.control1X && cubic.control0Y == cubic.control1Y) {
             Cubic(
                 anchor0X = cubic.anchor0X,
                 anchor0Y = cubic.anchor0Y,
                 anchor1X = cubic.anchor1X,
                 anchor1Y = cubic.anchor1Y,
+                // 本来必要な 2/3 の係数を適用して制御点を再計算
                 control0X = cubic.anchor0X + (cubic.control0X - cubic.anchor0X) * 2f / 3f,
                 control0Y = cubic.anchor0Y + (cubic.control0Y - cubic.anchor0Y) * 2f / 3f,
                 control1X = cubic.anchor1X + (cubic.control0X - cubic.anchor1X) * 2f / 3f,
@@ -62,6 +64,7 @@ val features = SvgPathParser.parseFeatures(
             cubic
         }
     }
+
     when {
         feature.isIgnorableFeature -> Feature.buildIgnorableFeature(cubics = patchedCubics)
         feature.isEdge -> Feature.buildEdge(cubic = patchedCubics.single())
