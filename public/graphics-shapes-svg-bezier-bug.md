@@ -24,7 +24,7 @@ ignorePublish: false
 
 `SvgPathParser.parseFeatures()` を使ってSVGパス文字列から `features` を取得し、それを `RoundedPolygon` に変換して描画したところ、本来の形状より歪んでしまう現象が発生します。
 
-SVGパスに含まれる2次ベジェ曲線（`q`コマンドなど）を、ライブラリ内部で3次ベジェ曲線に変換して扱う際は、2/3の係数を用いた座標計算が必要です。しかし、[ソースコード](https://github.com/androidx/androidx/blob/e6d33dd5d0a60001a5784d84123b05308d35f410/graphics/graphics-shapes/src/commonMain/kotlin/androidx/graphics/shapes/SvgPathParser.kt)を確認したところ、2次ベジェ曲線の制御点がそのまま3次ベジェの2つの制御点として単純にコピーされていました：
+SVGパスに含まれる2次ベジェ曲線（`q`コマンドなど）を、ライブラリ内部で3次ベジェ曲線に変換して扱う際は、2/3の係数を用いた座標計算が必要です。しかし、[ソースコード](https://github.com/androidx/androidx/blob/e6d33dd5d0a60001a5784d84123b05308d35f410/graphics/graphics-shapes/src/commonMain/kotlin/androidx/graphics/shapes/SvgPathParser.kt)を確認したところ、2次ベジェ曲線の制御点がそのまま3次ベジェ曲線の2つの制御点として単純にコピーされていました：
 
 ```kotlin
 'q' -> addCurveWith(command.xy(0, 1), command.xy(0, 1), command.xy(2, 3))
@@ -52,7 +52,7 @@ val features = SvgPathParser.parseFeatures(
                 anchor0Y = cubic.anchor0Y,
                 anchor1X = cubic.anchor1X,
                 anchor1Y = cubic.anchor1Y,
-                // 本来必要な 2/3 の係数を適用して制御点を再計算
+                // 本来必要な2/3の係数を適用して制御点を再計算
                 control0X = cubic.anchor0X + (cubic.control0X - cubic.anchor0X) * 2f / 3f,
                 control0Y = cubic.anchor0Y + (cubic.control0Y - cubic.anchor0Y) * 2f / 3f,
                 control1X = cubic.anchor1X + (cubic.control0X - cubic.anchor1X) * 2f / 3f,
