@@ -1,5 +1,5 @@
 ---
-title: newArticle001
+title: androidx.graphics:graphics-shapesのSvgPathParserにおけるベジェ曲線変換バグと回避策
 tags:
   - Android
   - Kotlin
@@ -13,8 +13,6 @@ organization_url_name: null
 slide: false
 ignorePublish: false
 ---
-
-# androidx.graphics:graphics-shapesのSvgPathParserにおけるベジェ曲線変換バグと回避策
 
 `androidx.graphics:graphics-shapes:1.1.0` にて追加された `SvgPathParser.parseFeatures()` を使用した際、SVGのパスが正しくパースされず、形状が歪むバグに遭遇しました。
 
