@@ -7,11 +7,13 @@ tags:
   - Jetpack
   - RoundedPolygon
 private: false
-updated_at: '2026-06-25T12:51:44+09:00'
+updated_at: '2026-07-04T08:31:37+09:00'
 id: 7d2e4a85f55c84b38c34
 organization_url_name: null
 slide: false
 ignorePublish: false
+posting_campaign_uuid: null
+agreed_posting_campaign_term: false
 ---
 
 `androidx.graphics:graphics-shapes:1.1.0` にて追加された `SvgPathParser.parseFeatures()` を使用した際、SVGのパスが正しくパースされず、形状が歪むバグに遭遇しました。

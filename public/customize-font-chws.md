@@ -7,11 +7,13 @@ tags:
   - 約物
   - chws
 private: false
-updated_at: '2026-06-18T23:38:20+09:00'
+updated_at: '2026-07-04T08:31:37+09:00'
 id: 69cfafbd3b62e7d45319
 organization_url_name: null
 slide: false
 ignorePublish: false
+posting_campaign_uuid: null
+agreed_posting_campaign_term: false
 ---
 
 Android 12から標準搭載されているNoto Sans/Serif CJKは、chws（Contextual Half-width Spacing）機能に対応しました。これにより、括弧や句読点などの約物のアキが自動で調整されるようになり、より美しい文字組みが実現されています。最近では `chws` に対応したフォントやテキスト描画システムが増えつつあり、ユーザー側も自然な文字組みを期待するようになっています。

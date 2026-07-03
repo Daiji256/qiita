@@ -7,11 +7,13 @@ tags:
   - JetpackCompose
   - Hilt
 private: false
-updated_at: '2026-03-19T12:24:45+09:00'
+updated_at: '2026-07-04T08:31:37+09:00'
 id: 2a9b4690f209db1fe878
 organization_url_name: null
 slide: false
 ignorePublish: false
+posting_campaign_uuid: null
+agreed_posting_campaign_term: false
 ---
 
 Composable関数内で、Hiltによって `@Provides` や `@Binds` で提供されたオブジェクトを直接的に扱いたい場面があります。
