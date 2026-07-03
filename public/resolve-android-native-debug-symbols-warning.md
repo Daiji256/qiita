@@ -7,7 +7,7 @@ tags:
   - GooglePlayConsole
   - AndroidAppBundle
 private: false
-updated_at: '2026-07-04T08:31:37+09:00'
+updated_at: '2026-07-04T08:40:09+09:00'
 id: 1ba7d94767bedf4f254f
 organization_url_name: null
 slide: false
