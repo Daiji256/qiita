@@ -12,6 +12,8 @@ id: eb1a32c4dcaa087769f3
 organization_url_name: null
 slide: false
 ignorePublish: false
+posting_campaign_uuid: null
+agreed_posting_campaign_term: false
 ---
 
 Androidアプリ開発において、`StateFlow` はUI状態管理に不可欠です。しかし、実際の開発では以下の課題に直面することがあります：

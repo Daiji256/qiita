@@ -12,6 +12,8 @@ id: f977ab6bdc2f10e36fda
 organization_url_name: null
 slide: false
 ignorePublish: false
+posting_campaign_uuid: null
+agreed_posting_campaign_term: false
 ---
 
 本記事は、[Kotlin Advent Calendar 2025](https://qiita.com/advent-calendar/2025/kotlin)の17日目の記事です。

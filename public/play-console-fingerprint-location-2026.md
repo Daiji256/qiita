@@ -12,8 +12,8 @@ id: dfcbc6972c31558657e7
 organization_url_name: null
 slide: false
 ignorePublish: false
-posting_campaign_uuid: null
-agreed_posting_campaign_term: false
+posting_campaign_uuid: 783b7a849caf11eefd91
+agreed_posting_campaign_term: true
 ---
 
 最近の[Play Console](https://play.google.com/console)のUI変更により、アプリ署名のフィンガープリント（SHA-1 / SHA-256）を確認する場所が変わりました。

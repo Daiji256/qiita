@@ -12,6 +12,8 @@ id: 59e2c676ce92b1f97058
 organization_url_name: null
 slide: false
 ignorePublish: false
+posting_campaign_uuid: null
+agreed_posting_campaign_term: false
 ---
 
 モバイルアプリにおいてユーザーへの情報伝達は非常に重要です。その中でも、短時間でユーザーにフィードバックを伝える際に便利なUI要素としてSnackbarがあります。

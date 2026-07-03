@@ -11,6 +11,8 @@ id: 8581083547aadfa17cce
 organization_url_name: null
 slide: false
 ignorePublish: false
+posting_campaign_uuid: null
+agreed_posting_campaign_term: false
 ---
 
 本記事は、[GitHub Actions Advent Calendar 2025](https://qiita.com/advent-calendar/2025/github-actions)の19日目の記事です。
