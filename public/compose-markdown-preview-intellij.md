@@ -5,7 +5,7 @@ tags:
   - Kotlin
   - Compose
 private: false
-updated_at: '2026-07-04T09:22:47+09:00'
+updated_at: '2026-07-04T09:24:33+09:00'
 id: 1e75a22ee19fc5dc0c04
 organization_url_name: null
 slide: false
