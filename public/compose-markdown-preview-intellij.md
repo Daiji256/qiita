@@ -16,23 +16,23 @@ ignorePublish: false
 
 本記事では、ComposeでMarkdownを描画する方法について紹介します。既存のMarkdown描画ライブラリを使うのではなく、[intellij-markdown](https://github.com/JetBrains/markdown)によりMarkdownをパースし、Composeで描画するという手順を踏みます。
 
-Markdownのパースを[intellij-markdown](https://github.com/JetBrains/markdown)に任せることで、多くの複雑な処理から解放されます。またパースして得られた構文木（AST）をどのように描画するかを自前で実装し独自のデザインや拡張性などの自由度を確保します。
+Markdownのパースをintellij-markdownに任せることで、多くの複雑な文字列処理から解放されます。一方で、パースして得られた構文木（AST）を「どのように描画するか」は自前で実装するため、アプリ独自のデザイン適用や拡張などの自由度を確保できるのがこのアプローチの強みです。
 
 ## Markdownをパース
 
-`MarkdownParser` によりMarkdown形式の `String` をパースし、`ASTNode` を得ます。
+まずは `MarkdownParser` によりMarkdown形式の生の `String` をパースし、`ASTNode` を得ます。
 
 ```kotlin
-val markdown = "#Header\nParagraph."
+val markdown = "# Header\nParagraph."
 val markdownParser = MarkdownParser(CommonMarkFlavourDescriptor())
 val node: ASTNode = markdownParser.buildMarkdownTreeFromString(text = markdown)
 ```
 
 ## `ASTNode` を扱いやすい形に変換
 
-`ASTNode` はMarkdownの強調表示やコード表示などがネストされたものを表します。そのため、そのまま描画するには扱いが難しいです。
+`ASTNode` にはMarkdownの強調表示やコード表示などがネストされた状態で格納されていますが、描画時に不要になる記号（`#` など）のトークンも含まれており、扱いには注意が必要です。
 
-ここでは、`ASTNode` を描画で扱いやすい独自クラスを定義し変換します。この、`Block` と `Content` はComposeで描画することを意識し、`Composable` や `AnnotatedString` で扱いやすいです。
+そこで、`ASTNode` を描画で扱いやすい独自のモデル（`Block` と `Content`）に変換します。このモデルはComposeの `Composable` や `AnnotatedString` にマッピングしやすいように設計しています。
 
 <details><summary>変換処理</summary>
 
@@ -123,7 +123,7 @@ sealed interface Content {
 
 ## Composeによる描画
 
-TODO: 説明
+`toBlocks` で得られた `List<Block>` をComposeで描画します。`Block` をComposable関数で扱い、`Content` は `AnnotatedString` で扱います。
 
 ```kotlin
 @Composable
@@ -193,15 +193,40 @@ private fun CodeBlock(block: Block.Code) {
         )
     }
 }
+
+private fun AnnotatedString.Builder.append(content: Content) {
+    when (content) {
+        is Content.Text ->
+            append(text = content.text)
+
+        is Content.Strong ->
+            withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                content.contents.forEach {
+                    append(content = it)
+                }
+            }
+
+        is Content.Code ->
+            withStyle(style = SpanStyle(fontFamily = FontFamily.Monospace)) {
+                content.contents.forEach {
+                    append(content = it)
+                }
+            }
+    }
+}
 ```
 
 ## このアプローチのメリット・デメリット
 
-実装を見るとわかるように、`MarkdownParser` のパース以降の処理は完全に自らがハンドリングしています。そのため、以下のような恩恵を受けられます。
+実装を見るとわかるように、`MarkdownParser` によるパース以降の処理は完全に自らがハンドリングしています。そのため、以下のようなメリット・デメリットがあります。
 
-- 見出しのマージン、コードブロックのデザインなどを自由に決めることができる
-- 特定のリンク（例：YouTubeのURL）は、単なるテキストリンクではなく、動画再生できるようにするなど、といった大胆な拡張も可能
-- Markdownの機能を全て活かすには、画像の描画などを含めて多くの実装が必要
+### メリット
+
+見出しのマージン、コードブロックの装飾などを自由に実装できます。また、特定のリンク（YouTubeのURLなど）は単なるテキストリンクではなく、動画プレイヤーなどのリッチなUIコンポーネントに差し替えるといった実装も可能です。
+
+### デメリット
+
+パース自体はintellij-markdownが行ってくれますが、Markdownのすべての機能（テーブル、画像、ネストされたリスト、引用など）をサポートするには、構文木の扱いとComposeのUI実装を自前で追加していく必要があります。
 
 ## 参考文献
 
