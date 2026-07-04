@@ -14,6 +14,8 @@ posting_campaign_uuid: 783b7a849caf11eefd91
 agreed_posting_campaign_term: true
 ---
 
+## はじめに
+
 本記事では、ComposeでMarkdownを描画する方法について紹介します。既存のMarkdown描画ライブラリを使うのではなく、[intellij-markdown](https://github.com/JetBrains/markdown)によりMarkdownをパースし、Composeで描画するという手順を踏みます。
 
 Markdownのパースをintellij-markdownに任せることで、多くの複雑な文字列処理から解放されます。一方で、パースして得られた構文木（AST）を「どのように描画するか」は自前で実装するため、アプリ独自のデザイン適用や拡張などの自由度を確保できるのがこのアプローチの強みです。
