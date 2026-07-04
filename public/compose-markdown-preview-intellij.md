@@ -1,5 +1,5 @@
 ---
-title: newArticle001
+title: intellij-markdownとComposeでMarkdownを柔軟に描画する
 tags:
   - Kotlin
   - Compose
@@ -13,8 +13,6 @@ ignorePublish: false
 posting_campaign_uuid: 783b7a849caf11eefd91
 agreed_posting_campaign_term: true
 ---
-
-# intellij-markdownとComposeでMarkdownを柔軟に描画する
 
 本記事では、ComposeでMarkdownを描画する方法について紹介します。既存のMarkdown描画ライブラリを使うのではなく、[intellij-markdown](https://github.com/JetBrains/markdown)によりMarkdownをパースし、Composeで描画するという手順を踏みます。
 
