@@ -1,12 +1,12 @@
 ---
 title: intellij-markdownとComposeでMarkdownを柔軟に描画する
 tags:
+  - Markdown
   - Kotlin
   - Compose
-  - Markdown
 private: false
-updated_at: ''
-id: null
+updated_at: '2026-07-04T09:22:47+09:00'
+id: 1e75a22ee19fc5dc0c04
 organization_url_name: null
 slide: false
 ignorePublish: false
