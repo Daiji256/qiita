@@ -141,7 +141,6 @@ fun Markdown(
         val blocks by produceState<List<Block>?>(
             initialValue = null,
             key1 = markdown,
-            key2 = markdownParser
         ) {
             value = withContext(Dispatchers.Default) {
                 markdownParser
