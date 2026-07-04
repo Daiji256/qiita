@@ -217,6 +217,29 @@ private fun AnnotatedString.Builder.append(content: Content) {
 }
 ```
 
+## 描画サンプル
+
+実装した `Markdown` の描画を確認してみます。
+
+```kotlin
+Markdown(
+    markdown = """
+        # Header
+
+        Inline `code1`.
+        **Strong Inline `code2`.**
+
+        ```
+        fun function(arg: Int): Int {
+            return arg * 2
+        }
+        ```
+    """.trimIndent(),
+)
+```
+
+![Markdownの描画サンプル](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/699841/1d1977ea-0fc1-4bf3-9d7d-a6b4c9c1112c.png)
+
 ## このアプローチのメリット・デメリット
 
 実装を見るとわかるように、`MarkdownParser` によるパース以降の処理は完全に自らがハンドリングしています。そのため、以下のようなメリット・デメリットがあります。
