@@ -143,7 +143,7 @@ fun Markdown(
             key1 = markdown,
             key2 = markdownParser
         ) {
-            value = withContext(Dispatchers.IO) {
+            value = withContext(Dispatchers.Default) {
                 markdownParser
                     .buildMarkdownTreeFromString(text = markdown)
                     .toBlocks(markdown = markdown)
