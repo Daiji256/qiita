@@ -4,7 +4,7 @@ tags:
   - Android
   - Kotlin
 private: false
-updated_at: '2026-07-06T03:01:58+09:00'
+updated_at: '2026-07-06T08:27:12+09:00'
 id: 3ad5ecad11cfcf242ef2
 organization_url_name: null
 slide: false
