@@ -1,5 +1,5 @@
 ---
-title: newArticle001
+title: OSSライセンスのためにPOMを参照してJSONを出力する
 tags:
   - Gradle
   - Kotlin
@@ -13,8 +13,6 @@ ignorePublish: false
 posting_campaign_uuid: 783b7a849caf11eefd91
 agreed_posting_campaign_term: true
 ---
-
-# OSSライセンスのためにPOMを参照してJSONを出力する
 
 ライブラリの依存関係やOSSライセンス情報を抽出する際、既存の多機能なツールでは「ブラックボックスな処理が多い」「不要な処理まで巻き込まれる」といった課題があります。
 
