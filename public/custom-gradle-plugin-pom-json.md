@@ -1,12 +1,12 @@
 ---
 title: OSSライセンスのためにPOMを参照してJSONを出力する
 tags:
-  - Gradle
-  - Kotlin
   - Android
+  - Kotlin
+  - gradle
 private: false
-updated_at: ''
-id: null
+updated_at: '2026-07-06T03:01:58+09:00'
+id: 3ad5ecad11cfcf242ef2
 organization_url_name: null
 slide: false
 ignorePublish: false
