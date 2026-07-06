@@ -3,12 +3,12 @@ title: Nav3におけるretainとViewModelの生存期間の違いと調整方法
 tags:
   - Android
   - Compose
-  - Navigation3
-  - ViewModel
   - lifecycle
+  - ViewModel
+  - Navigation3
 private: false
-updated_at: ''
-id: null
+updated_at: '2026-07-06T09:49:03+09:00'
+id: 7e4872a9345f5257fef0
 organization_url_name: null
 slide: false
 ignorePublish: false
