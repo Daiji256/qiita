@@ -120,7 +120,7 @@ class RetainedValuesStoreNavEntryDecorator<T : Any>(
 
 - `retain` と `ViewModel` は、画面遷移の文脈においては生存期間が異なる
 - 一般的に `retain` は画面を離れる（遷移する）と破棄されるが、`ViewModel` はバックスタックに含まれている間はインスタンスが保持され続ける
-- `retain` を用いたバックスタックにある間も値を保持は、`RetainedValuesStoreRegistry` と独自の `NavEntryDecorator` により実現できる
+- `retain` を用いて、バックスタックにある間も値を保持するには、`RetainedValuesStoreRegistry` と独自の `NavEntryDecorator` により実現できる
 
 ## 参考文献
 
