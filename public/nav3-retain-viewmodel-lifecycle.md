@@ -1,7 +1,11 @@
 ---
-title: newArticle001
+title: Nav3におけるretainとViewModelの生存期間の違いと調整方法
 tags:
-  - ''
+  - Android
+  - Compose
+  - Navigation3
+  - ViewModel
+  - lifecycle
 private: false
 updated_at: ''
 id: null
@@ -11,8 +15,6 @@ ignorePublish: false
 posting_campaign_uuid: null
 agreed_posting_campaign_term: false
 ---
-
-# Nav3における `retain` と `ViewModel` の生存期間の違いと調整方法
 
 ## はじめに
 
