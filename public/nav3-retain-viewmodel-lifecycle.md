@@ -7,7 +7,7 @@ tags:
   - ViewModel
   - Navigation3
 private: false
-updated_at: '2026-07-06T09:49:03+09:00'
+updated_at: '2026-07-07T20:58:37+09:00'
 id: 7e4872a9345f5257fef0
 organization_url_name: null
 slide: false
