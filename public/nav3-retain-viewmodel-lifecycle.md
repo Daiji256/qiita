@@ -50,7 +50,7 @@ Nav3を用いて画面遷移を行った場合、`retain` と `ViewModel` の生
 
 一方で、`ViewModel` の `Baz` は破棄されません。そのため、`SecondScreen` からバック操作で `FirstScreen` へ戻ってきた後も、同じ `Baz` インスタンスを参照し続けることができます。
 
-なぜ、`ViewModel` はバックスタックにある間保持され続けるかというと、Nav3の `ViewModelStoreNavEntryDecorator` によって、ViewModelの生存期間がバックスタックと紐づくように設計されているためです。
+なぜ、`ViewModel` はバックスタックにある間保持され続けるかというと、Nav3の `ViewModelStoreNavEntryDecorator` によって、`ViewModel` の生存期間がバックスタックと紐づくように設計されているためです。
 
 以下のコードは、`ViewModelStoreNavEntryDecorator` の実装の一部抜粋です。これを見ると、バックスタック全体で共通の `ViewModelStoreProvider` を保持しており、各画面の `ViewModel` はそこに格納されます。そして、バックスタックからエントリが破棄されるタイミング（`onPop`）に合わせて、不要になった `ViewModel` を破棄することで、画面遷移に合わせた生存期間を実現しています。
 
