@@ -18,21 +18,17 @@ agreed_posting_campaign_term: true
 
 ## はじめに
 
-スマホは画面の四隅が丸くなっています。一方で、Composableはデフォルトでは四角いです。画面遷移アニメーションを作っている時にその形状の差を埋めたいと考えました。これを実現するには、各画面のComposableも端末に合わせて形状を変更する必要があります。
+スマホは画面の四隅が丸くなっています。一方で、`Composable` はデフォルトでは四角いです。画面遷移アニメーションを作っている時にその形状の差を埋めたいと考えました。これを実現するには、各画面の `Composable` も端末に合わせて形状を変更する必要があります。
 
 ![角丸を適用した時の画面遷移アニメーションの例](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/699841/98cc46c8-9a9f-4aa0-bdf1-8a926b253ebc.png)
 
 ## アプローチ
 
-角丸の半径は `WindowInsets.getRoundedCorner(int position)`[^android12] により取得できます。今回は、`LayoutDirection` を考慮した上で取得した半径を使って `Shape` を作成します。
+角丸の半径は `WindowInsets.getRoundedCorner(position: Int)`[^android12] により取得できます。今回は、`LayoutDirection` を考慮した上で取得した半径を使って `Shape` を作成します。
 
-この形状をさまざまな場所から参照するため、ここでは `compositionLocalWithComputedDefaultOf` を使って実装します。`compositionLocalWithComputedDefaultOf` を使うことで、以下のようなメリットがあります。
+この形状をさまざまな場所から参照するため、ここでは `compositionLocalWithComputedDefaultOf` を使って実装します。`compositionLocalWithComputedDefaultOf` を使うことで、デフォルト値に `LocalView` などを参照できます。
 
-- デフォルト値に `LocalView` などを利用した計算結果を設定できる
-- 通常の `compositionLocalOf` のようにルートでわざわざ `Provide` しなくても、定義するだけで `LocalView` や `LocalLayoutDirection` の値から自動計算してくれるため、使う側はどこからでもシュッと呼べて手軽
-- `CompositionLocal` なので、特定のスコープでは別の値に上書きすることも可能
-
-[^android12]: `WindowInsets.getRoundedCorner(int position)` はAndroid 12（API 31）以降に利用可能です。
+[^android12]: `WindowInsets.getRoundedCorner(position: Int)` はAndroid 12（API 31）以降に利用可能です。
 
 ## 実装コード
 
@@ -49,27 +45,16 @@ Scaffold(
 val LocalWindowShape = compositionLocalWithComputedDefaultOf<Shape> {
     val view = LocalView.currentValue
     val insets = view.rootWindowInsets
-    val topLeft = insets?.getRoundedCorner(RoundedCorner.POSITION_TOP_LEFT)?.radius ?: 0
-    val topRight = insets?.getRoundedCorner(RoundedCorner.POSITION_TOP_RIGHT)?.radius ?: 0
-    val bottomRight = insets?.getRoundedCorner(RoundedCorner.POSITION_BOTTOM_RIGHT)?.radius ?: 0
-    val bottomLeft = insets?.getRoundedCorner(RoundedCorner.POSITION_BOTTOM_LEFT)?.radius ?: 0
-    when (LocalLayoutDirection.currentValue) {
-        LayoutDirection.Ltr ->
-            RoundedCornerShape(
-                topStart = topLeft.toFloat(),
-                topEnd = topRight.toFloat(),
-                bottomEnd = bottomRight.toFloat(),
-                bottomStart = bottomLeft.toFloat(),
-            )
-
-        LayoutDirection.Rtl ->
-            RoundedCornerShape(
-                topStart = topRight.toFloat(),
-                topEnd = topLeft.toFloat(),
-                bottomEnd = bottomLeft.toFloat(),
-                bottomStart = bottomRight.toFloat(),
-            )
-    }
+    val topLeftCorner = insets?.getRoundedCorner(RoundedCorner.POSITION_TOP_LEFT)
+    val topRightCorner = insets?.getRoundedCorner(RoundedCorner.POSITION_TOP_RIGHT)
+    val bottomRightCorner = insets?.getRoundedCorner(RoundedCorner.POSITION_BOTTOM_RIGHT)
+    val bottomLeftCorner = insets?.getRoundedCorner(RoundedCorner.POSITION_BOTTOM_LEFT)
+    AbsoluteRoundedCornerShape(
+        topLeft = topLeftCorner?.radius?.toFloat() ?: 0f,
+        topRight = topRightCorner?.radius?.toFloat() ?: 0f,
+        bottomRight = bottomRightCorner?.radius?.toFloat() ?: 0f,
+        bottomLeft = bottomLeftCorner?.radius?.toFloat() ?: 0f,
+    )
 }
 ```
 
@@ -77,4 +62,4 @@ val LocalWindowShape = compositionLocalWithComputedDefaultOf<Shape> {
 
 - [Insets: Apply rounded corners | Views | Android Developers](https://developer.android.com/develop/ui/views/layout/insets/rounded-corners)
 - [WindowInsets | API reference | Android Developers](https://developer.android.com/reference/android/view/WindowInsets)
-- [LocalWindowShape.kt | Daiji256/android-showcase | GitHub](https://github.com/Daiji256/android-showcase/blob/d2267fcb29979efba3ed77bf78ee101694cda6a6/core/ui/src/main/kotlin/io/github/daiji256/showcase/core/ui/window/LocalWindowShape.kt)
+- [LocalWindowShape.kt | Daiji256/android-showcase | GitHub](https://github.com/Daiji256/android-showcase/blob/e03373ad2062adda53c10393bca16593b335fe35/core/ui/src/main/kotlin/io/github/daiji256/showcase/core/ui/window/LocalWindowShape.kt)
