@@ -16,50 +16,28 @@ posting_campaign_uuid: 783b7a849caf11eefd91
 agreed_posting_campaign_term: true
 ---
 
-- Roborazziを使ってPreviewをスクリーンショット撮り、差分を検出している
-- デフォルトでは、システムバーを含めない
-- システムバーをスクリーンショットの対象に加えることで、`navigationBarsPadding()` の実装ミスなどを見つけやすくなる
-- スクリーンショットはテスト以外の目的（他職種への共有）などでも使いまわすため、自然な見た目でシステムバーを実装した
-- `DeviceConfigurationOverride` + `DeviceConfigurationOverride.WindowInsets` で `WindowInset` を設定
-- `Modifier.testTag("root")` と `.onNodeWithTag(testTag = "root")` で `DeviceConfigurationOverride` 下の `Composable` のスクリーンショットを撮る
-- `SystemUi()` でシステムバーに相当するデザインを表示
+# Roborazziのスクリーンショットテストにシステムバーを含める方法
 
-```kotlin
-@RunWith(RobolectricTestRunner::class)
-@GraphicsMode(GraphicsMode.Mode.NATIVE)
-class SystemBarsTest {
-    @get:Rule
-    val composeTestRule = createAndroidComposeRule<ComponentActivity>()
+Roborazziを使ってComposeのスクリーンショットテスト（画像回帰テスト）を行う際、デフォルトではシステムバーが含まれません。
 
-    @Config(qualifiers = "w414dp-h736dp-xxhdpi")
-    @Test
-    fun test() {
-        composeTestRule.setContent {
-            DeviceConfigurationOverride(
-                override = DeviceConfigurationOverride.WindowInsets(windowInsets = windowInsets()),
-            ) {
-                Box(modifier = Modifier.testTag("root")) {
-                    // 適当にコメント
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color(0xFFE0E0E0))
-                            .systemBarsPadding()
-                            .background(Color(0xFFE8E8E8))
-                    ) {
-                        Text(text = "text")
-                    }
+この記事では、テスト時に擬似的なシステムバーを描画し、スクリーンショットの対象に含める方法を簡潔に紹介します。
 
-                    SystemUi()
-                }
-            }
-        }
-        composeTestRule
-            .onNodeWithTag(testTag = "root")
-            .captureRoboImage(filePath = "image.png")
-    }
-}
-```
+## なぜシステムバーを含めるのか？
+
+- `navigationBarsPadding()` などの実装ミスなどに気が付きやすくなる
+- 他職種（デザイナー等）へスクリーンショット共有する際、実機に近い自然な見た目になる
+
+## 実装手順
+
+大まかな方針は以下の通りです。
+
+1. `DeviceConfigurationOverride.WindowInsets` で擬似的な `WindowInset` を設定する。
+2. ステータスバー・ナビゲーションバーに相当するデザイン（`SystemUi()`）を独自に描画する。
+3. 全体を囲むコンポーザブルに `Modifier.testTag("root")` を指定し、まとめてスクリーンショットを撮る。
+
+### `WindowInsets` のモックを用意
+
+システムバーの高さに相当する擬似的な `Insets` を定義します。ここでは、ステータスバーは上部に24 dp、ナビゲーションバーは下部に24 dpとして定義します。
 
 ```kotlin
 @Composable
@@ -78,10 +56,15 @@ fun windowInsets() =
     }
 ```
 
+### システムバーのUIを作成する
+
+自然に見えるように、時間やバッテリー、インジケーター等を配置したシステムバーのモックUIを作成します。
+
 ```kotlin
 @Composable
 fun SystemUi() {
     Column {
+        // ステータスバー
         Row(
             verticalAlignment = Alignment.Bottom,
             modifier = Modifier
@@ -114,7 +97,10 @@ fun SystemUi() {
                 tint = Color.Gray,
             )
         }
+        
         Spacer(modifier = Modifier.weight(1f))
+        
+        // ナビゲーションバー
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
@@ -130,3 +116,57 @@ fun SystemUi() {
     }
 }
 ```
+
+### テストコードの実装
+
+`DeviceConfigurationOverride` を用いて、作成した `windowInsets()` を注入します。最後に `onNodeWithTag("root")` を指定してキャプチャを実行します。
+
+```kotlin
+@RunWith(RobolectricTestRunner::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+class Test {
+    @get:Rule
+    val composeTestRule = createAndroidComposeRule<ComponentActivity>()
+
+    @Config(qualifiers = "w414dp-h736dp-xxhdpi")
+    @Test
+    fun test() {
+        composeTestRule.setContent {
+            DeviceConfigurationOverride(
+                override = DeviceConfigurationOverride.WindowInsets(windowInsets = windowInsets()),
+            ) {
+                // 主要なComposableとシステムバーをテスト対象にする
+                Box(modifier = Modifier.testTag("root")) {
+                    // 主なテスト対象のComposable
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color(0xFFE0E0E0))
+                            .systemBarsPadding()
+                            .background(Color(0xFFE8E8E8))
+                    ) {
+                        Text(text = "text")
+                    }
+
+                    // システムバーを描画
+                    SystemUi()
+                }
+            }
+        }
+
+        composeTestRule
+            .onNodeWithTag(testTag = "root")
+            .captureRoboImage(filePath = "image.png")
+    }
+}
+```
+
+## まとめ
+
+TODO
+
+## 参考文献
+
+- [Roborazzi | GitHub](https://github.com/takahirom/roborazzi)
+- [DeviceConfigurationOverride | API reference | Android Developers](https://developer.android.com/reference/kotlin/androidx/compose/ui/test/DeviceConfigurationOverride)
+- [PreviewTester.kt | Daiji256/android-showcase | GitHub](https://github.com/Daiji256/android-showcase/blob/fe7ca385da79219c73b3cb613d75de836e3655b2/core/testing/src/main/kotlin/io/github/daiji256/showcase/core/testing/PreviewTester.kt)
