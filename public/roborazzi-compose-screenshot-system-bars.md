@@ -163,6 +163,12 @@ class Test {
 }
 ```
 
+## 結果
+
+前節までで紹介したサンプルコードで撮影できるスクリーンショットは次のようになります。
+
+![Roborazziで擬似的なシステムバーを含めて撮影したComposeのスクリーンショットテスト結果](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/699841/783f683f-29a1-4084-8802-689253f5a29c.png)
+
 ## まとめ
 
 - `DeviceConfigurationOverride.WindowInsets` を利用することで、Roborazziのスクリーンショットテストに擬似的なシステムバーを簡単に組み込むことができる
