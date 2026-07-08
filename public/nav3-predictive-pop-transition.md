@@ -1,5 +1,5 @@
 ---
-title: Nav3用のpredictivePopTransitionSpecがそれっぽくなったのでメモする
+title: Nav3用のpredictivePopTransitionSpecがそれっぽくするための実装
 tags:
   - Android
   - Compose
