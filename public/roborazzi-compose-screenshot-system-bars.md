@@ -170,4 +170,4 @@ class Test {
 
 - [Roborazzi | GitHub](https://github.com/takahirom/roborazzi)
 - [DeviceConfigurationOverride | API reference | Android Developers](https://developer.android.com/reference/kotlin/androidx/compose/ui/test/DeviceConfigurationOverride)
-- [PreviewTester.kt | Daiji256/android-showcase | GitHub](https://github.com/Daiji256/android-showcase/blob/fe7ca385da79219c73b3cb613d75de836e3655b2/core/testing/src/main/kotlin/io/github/daiji256/showcase/core/testing/PreviewTester.kt)
+- [PreviewTester.kt | Daiji256/android-showcase | GitHub](https://github.com/Daiji256/android-showcase/blob/fcc9b65e883a54c58880c3189114299ec69649c3/core/testing/src/main/kotlin/io/github/daiji256/showcase/core/testing/PreviewTester.kt)
