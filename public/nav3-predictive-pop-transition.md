@@ -4,11 +4,11 @@ tags:
   - Android
   - Compose
   - JetpackCompose
-  - Navigation3
   - PredictiveBack
+  - Navigation3
 private: false
-updated_at: ''
-id: null
+updated_at: '2026-07-08T12:37:57+09:00'
+id: ee591d57616dd1504526
 organization_url_name: null
 slide: false
 ignorePublish: false
