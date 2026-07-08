@@ -1,5 +1,5 @@
 ---
-title: newArticle001
+title: Roborazziのスクリーンショットテストにシステムバーを含める方法
 tags:
   - Android
   - Compose
@@ -15,8 +15,6 @@ ignorePublish: false
 posting_campaign_uuid: 783b7a849caf11eefd91
 agreed_posting_campaign_term: true
 ---
-
-# Roborazziのスクリーンショットテストにシステムバーを含める方法
 
 Roborazziを使ってComposeのスクリーンショットテスト（画像回帰テスト）を行う際、デフォルトではシステムバーが含まれません。
 
