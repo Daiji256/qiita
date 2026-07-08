@@ -2,13 +2,13 @@
 title: Roborazziのスクリーンショットテストにシステムバーを含める方法
 tags:
   - Android
+  - テスト
   - Compose
   - JetpackCompose
   - Roborazzi
-  - テスト
 private: false
-updated_at: ''
-id: null
+updated_at: '2026-07-09T01:48:35+09:00'
+id: e53d3bf10ab83f376d6e
 organization_url_name: null
 slide: false
 ignorePublish: false
