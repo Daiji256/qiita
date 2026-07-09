@@ -16,17 +16,17 @@ posting_campaign_uuid: 783b7a849caf11eefd91
 agreed_posting_campaign_term: true
 ---
 
-## 色々
+# Kotlin 2.4.0のSwift ExportでFlowをSwiftUIのStateにバインドする
 
-- Kotlin 2.4.0のSwift ExportでFlowに対応
-- Composableでやっている `collectAsState` をSwiftUIでもやりたい
-- SwiftUIでは全く同じようにはできないので、`@State` に値を格納するための拡張関数を作る
-- Composableのようなライフサイクルやインスタンスの作成にはならないから、`init` と `task` で実現する
-- `flow.asAsyncSequence()` で `Sequence` になるので、Swiftで扱いやすくなる
+## はじめに
 
-## 記事に載せる予定のソースコード
+Kotlin 2.4.0のSwift Exportにより、Kotlinの `Flow` がSwift側から扱えるようになりました。`Flow.asAsyncSequence()` により、Swiftの `AsyncSequence` として処理できます。
 
-### このようなよくあるコードをSwiftUI側からも扱いたい
+この記事では、SwiftUIから気軽に `Flow` を参照し、描画に使える状態として扱えるようにする方法を紹介します。
+
+## サンプルに利用するコード
+
+以下のような状態を管理する `Store` クラスを定義します。
 
 ```kotlin
 class Store {
@@ -39,23 +39,28 @@ class Store {
 }
 ```
 
-### Composableでいうこんな感じ
+## Composeではどのように扱っているか
+
+SwiftUIでの扱いを考える前に、Composeではどうしていたかをおさらいします。Composeでは `collectAsState()` により、`Flow` / `StateFlow` を `State` に変換しています。
 
 ```kotlin
 @Composable
 fun ContentComposable() {
     val store = remember { Store() }
     val state by store.state.collectAsState()
-    Column {
-        Text(text = state.toString())
-        Button(onClick = { store.increment() }) {
-            Text("increment")
-        }
-    }
+    // ...
 }
 ```
 
-### Stateに格納する拡張関数を作った
+## SwiftUI向けの拡張関数を作成する
+
+SwiftUIとComposeではインスタンスの作成タイミングやライフサイクルの管理方法が異なります。SwiftUIではComposeと同じアプローチをとることはできません。
+
+そこで、SwiftUIの `@State` で状態を保持し、`init` と `task` にて初期化と更新を行います。再利用性を考え、`Flow` を `collect` した時に `@State` に値を格納する `View` の拡張関数として `bind` を作成します。
+
+SwiftではKotlinの `Flow` を直接 `collect` することはできません。Swift Exportによる `Flow.asAsyncSequence()` により、`AsyncSequence` に変換し、`for try await` することで `collect` と同等の動作を実現できます。
+
+以下の実装例では、`Flow` のインスタンスが変わったときに `Task` を再起動するようにしています。
 
 ```swift
 extension View {
@@ -79,7 +84,11 @@ extension View {
 }
 ```
 
-### SwiftUIではこんなふうに利用できる
+## SwiftUIでの利用例
+
+作成した `bind` を使って、実際にSwiftUIの `View` を構築します。
+
+Composeの `remember` の代わりに `init` で初期状態を設定し、作成した `bind` でKotlinの `Flow` とSwiftUIの `@State` を紐付けます。
 
 ```swift
 struct ContentView: View {
@@ -103,3 +112,20 @@ struct ContentView: View {
     }
 }
 ```
+
+## 結果
+
+前節までで紹介したサンプルコードにより、`Flow` をUI上で表示できるようになります。
+
+![SwiftUI上でFlowの表示ができている様子](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/699841/5f398e72-0cfb-4e7f-92d6-b8fc191f9472.gif)
+
+## まとめ
+
+- Kotlin 2.4.0のSwift Exportと `Flow.asAsyncSequence()` を活用することで、Swiftからも `Flow` を扱うことができる
+- `init` と `task` で初期化・更新を行うことで、SwiftUI上で `Flow` の値を描画に利用できる
+
+## 参考文献
+
+- [Interoperability with Swift using Swift export | Kotlin Documentation](https://kotlinlang.org/docs/native-swift-export.html)
+- [Flows | Kotlin Documentation](https://kotlinlang.org/docs/coroutines-flow.html)
+- [AsyncSequence | Apple Developer Documentation](https://developer.apple.com/documentation/swift/asyncsequence)
