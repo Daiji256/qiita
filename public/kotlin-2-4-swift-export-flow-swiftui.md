@@ -54,14 +54,16 @@ fun ContentComposable() {
 
 ## Kotlinの実装を `ObservableObject` でラップする
 
-TODO: 簡単に説明、remember に相当
+SwiftUIの `View` は、画面の再描画のたびに `init` が呼び出されるという特性があります。そのため、`View` の中で直接Kotlinのクラスをインスタンス化すると、不要な再生成が繰り返されてしまいます。
+
+これを防ぐ、Composeの `remember` のように「Viewのライフサイクルに合わせて一度だけ初期化・保持」させるようなものを実装します。具体的には、SwiftUIの `@StateObject` で扱えるようシンプルなラッパークラスを作成します。
 
 ```swift
-final class ObservableWrapper<T>: ObservableObject {
-    @Published var value: T
+final class Remember<T>: ObservableObject {
+    let value: T
 
-    init(_ value: T) {
-        self.value = value
+    init(_ initialValue: @autoclosure () -> T) {
+        self.value = initialValue()
     }
 }
 ```
@@ -70,9 +72,9 @@ final class ObservableWrapper<T>: ObservableObject {
 
 SwiftUIとComposeではインスタンスの作成タイミングやライフサイクルの管理方法が異なります。SwiftUIではComposeと同じアプローチをとることはできません。
 
-そこで、SwiftUIの `@State` で状態を保持し、`init` と `task` にて初期化と更新を行います。
+そこで、SwiftUIの `@State` で状態を保持し、`init` と `task` にて初期化と更新を行う専用の `View` を作成します。
 
-SwiftではKotlinの `Flow` を直接 `collect` することはできません。Swift Exportによる `Flow.asAsyncSequence()` により、`AsyncSequence` に変換し、`for try await` することで `collect` と同等の動作を実現できます。
+SwiftではKotlinの `Flow` を直接 `collect` することはできませんが、Swift Exportによる `Flow.asAsyncSequence()` により `AsyncSequence` に変換し、`for try await` することで `collect` と同等の動作を実現できます。
 
 ```swift
 struct ObservingView<T, Content: View>: View {
@@ -118,13 +120,13 @@ struct ObservingView<T, Content: View>: View {
 
 ## SwiftUIでの利用例
 
-作成した `ObservingView` を使って、実際にSwiftUIの `View` を構築します。
+作成した `Remember` と `ObservingView` を使って、実際にSwiftUIの `View` を構築します。
 
-TODO: 補足
+`View` では直接的には `@StateObject` を用いて `Store` を保持することしかしません。状態の監視等は `ObservingView` に閉じて行います。`ObservingView` の `content` では `state` を受け取ることができるため、`Flow` の変更をUIに反映することができます。
 
 ```swift
 struct ContentView: View {
-    @StateObject private var storeHolder = ObservableWrapper(Store())
+    @StateObject private var storeHolder = Remember(Store())
 
     var body: some View {
         let store = storeHolder.value
@@ -149,7 +151,8 @@ struct ContentView: View {
 ## まとめ
 
 - Kotlin 2.4.0のSwift Exportと `Flow.asAsyncSequence()` を活用することで、Swiftからも `Flow` を扱うことができる
-- TODO
+- SwiftUIのライフサイクルの違い（`init` の反復呼び出しなど）を吸収するため、`ObservableObject` / `@StateObject` を活用してKotlin側のインスタンスを保持する
+- `Flow` の購読処理を `ObservingView` のように専用の `View` へ切り出すことで、`Flow` を手軽に描画に利用できる。
 
 ## 参考文献
 
