@@ -1,5 +1,5 @@
 ---
-title: Xcode 27で@Stateマクロにより@Observableの無駄なインスタンス生成がなくなった
+title: Xcode 27の@Stateのマクロ化したことで、無駄なインスタンス生成がなくなる
 tags:
   - SwiftUI
   - Xcode
@@ -16,7 +16,7 @@ posting_campaign_uuid: 783b7a849caf11eefd91
 agreed_posting_campaign_term: true
 ---
 
-# Xcode 27で@Stateマクロにより@Observableの無駄なインスタンス生成がなくなった
+# Xcode 27の@Stateのマクロ化したことで、無駄なインスタンス生成がなくなる
 
 KMPを学んでいると、自然とiOSやSwiftに興味が向くようになりました。AndroidやComposeに慣れているとSwiftUIの挙動に違和感を持つことがあります。
 
