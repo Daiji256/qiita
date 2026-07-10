@@ -1,14 +1,14 @@
 ---
 title: Xcode 27で@Stateがマクロ化されたことで、無駄なインスタンス生成がなくなる
 tags:
-  - SwiftUI
   - Xcode
+  - iOS
   - Swift
   - Observable
-  - iOS
+  - SwiftUI
 private: false
-updated_at: ''
-id: null
+updated_at: '2026-07-10T20:13:49+09:00'
+id: 4dea2aab1b27379e22fc
 organization_url_name: null
 slide: false
 ignorePublish: false
