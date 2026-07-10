@@ -5,7 +5,7 @@ tags:
   - Kotlin
   - Swift
   - SwiftUI
-  - Swift Export
+  - SwiftExport
 private: false
 updated_at: ''
 id: null
