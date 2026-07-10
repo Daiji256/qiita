@@ -89,7 +89,7 @@ struct ObservingView<T, Content: View>: View {
         initialValue: T,
         @ViewBuilder content: @escaping (T) -> Content
     ) {
-        self.state = initialValue
+        self._state = State(wrappedValue: initialValue)
         self.flow = flow
         self.content = content
     }
@@ -98,7 +98,7 @@ struct ObservingView<T, Content: View>: View {
         stateFlow: any KotlinTypedStateFlow<T>,
         @ViewBuilder content: @escaping (T) -> Content
     ) {
-        self.state = stateFlow.value
+        self._state = State(wrappedValue: stateFlow.value)
         self.flow = stateFlow
         self.content = content
     }
