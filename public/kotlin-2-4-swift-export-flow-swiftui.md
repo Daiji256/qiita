@@ -1,5 +1,5 @@
 ---
-title: newArticle001
+title: Kotlin 2.4.0のSwift ExportでFlowをSwiftUIのStateにバインドする
 tags:
   - KMP
   - Kotlin
@@ -15,8 +15,6 @@ ignorePublish: false
 posting_campaign_uuid: 783b7a849caf11eefd91
 agreed_posting_campaign_term: true
 ---
-
-# Kotlin 2.4.0のSwift ExportでFlowをSwiftUIのStateにバインドする
 
 ## はじめに
 
