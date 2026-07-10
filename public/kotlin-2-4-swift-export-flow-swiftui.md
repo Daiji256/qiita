@@ -54,7 +54,9 @@ fun ContentComposable() {
 
 ## Kotlinの実装を `ObservableObject` でラップする
 
-SwiftUIの `View` は、画面の再描画のたびに `init` が呼び出されるという特性があります。そのため、`View` の中で直接Kotlinのクラスをインスタンス化すると、不要な再生成が繰り返されてしまいます。
+SwiftUIの `View` は、画面の再描画のたびに `init` が呼び出されるという特性があります。そのため、`View` の中で直接Kotlinのクラスをインスタンス化すると、不要な再生成が繰り返されてしまいます[^xcode-27]。
+
+[^xcode-27]: `@Observable` と `@State` を使わずに、旧来の `ObservableObject` と `@StateObject` を使う理由はここにあります。ただし、Xcode 27からは `@State` 周辺の仕組みが変わるため、今後は実装方法が変わると思います。
 
 これを防ぐ、Composeの `remember` のように「Viewのライフサイクルに合わせて一度だけ初期化・保持」させるようなものを実装します。具体的には、SwiftUIの `@StateObject` で扱えるようシンプルなラッパークラスを作成します。
 
