@@ -1,5 +1,5 @@
 ---
-title: Unitテストでスプラッシュ画面用のAnimatedVectorDrawableを作った話
+title: ComposeとUnitテストでAnimatedVectorDrawableを作る
 tags:
   - Android
   - robolectric
