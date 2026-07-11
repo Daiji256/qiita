@@ -15,21 +15,21 @@ posting_campaign_uuid: null
 agreed_posting_campaign_term: false
 ---
 
-# ComposeとRoborazziでGoogle Play Store用の画像を生成してみた
+# ComposeとRoborazziでPlayストア用の画像を生成してみた
 
 ## はじめに
 
-個人でAndroidアプリを開発したとき、Google Play Store用のアイコンやスクリーンショットなどの画像アセットを用意するのが面倒だなと思いました。
+個人でAndroidアプリを開発していたとき、Playストア用のアイコンやスクリーンショットなどの画像アセットを用意するのが面倒だと感じました。
 
-アプリのUIやデザインを変更するたびに、Figmaなども更新し、画像をエクスポートするのは正直手間でした。個人的には、自分だけの開発なので、慣れ親しんだComposeやGit環境で完結する方が望ましいです。
+アプリのUIやデザインを変更するたびに、Figmaなどの外部ツール側も更新して、画像をエクスポートし直すのは正直手間です。個人的には、自分だけの開発だからこそ、慣れ親しんだComposeのコードとGitの環境だけで完結させたいと考えました。
 
-そこで、普段UIテストで利用しているRoborazziを画像生成ツールとして流用してみました。RoborazziでGoogle Play Store用の画像を生成したことをこの記事でまとめます。
+そこで、普段UIテストで利用しているRoborazziを画像生成ツールとして流用してみました。やってみたら便利だったので、設定方法や良かったことをこの記事にまとめます。
 
 ## 実装コード
 
-使い慣れたComposeで画像用に描画し、Roborazziにより画像として出力しました。Robolectricの `@Config` により、画像サイズや言語設定を簡単に設定できます。
+使い慣れたComposeで画像用にUIを描画し、Roborazziの機能を使ってローカルに画像を出力します。
 
-以下のようなUnitテストを作成し、実行するだけで指定したディレクトリに画像が生成されるようにしました。
+Robolectricの `@Config(qualifiers = "...")` により画像のサイズや端末の言語設定をテストケースごとに設定できます。以下のようなUnitテストを作成し、実行するだけで、指定したディレクトリに画像を生成できます。
 
 ```kotlin
 @RunWith(RobolectricTestRunner::class)
@@ -38,26 +38,26 @@ class CapturePlayStoreImages {
     @get:Rule
     val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
-    // 512×512のアイコン画像を生成する（128×4=512）
+    // Playストア用アイコン（512px × 512px）を生成する
     @Config(qualifiers = "w128dp-h128dp-xxxhdpi")
     @Test
     fun captureIcon() {
         composeTestRule.setContent {
-            // ここに画像で出力したいComposableの実装を配置する
+            // ここに画像として出力したいComposableの実装を配置する
         }
         composeTestRule.onRoot().captureRoboImage(
             filePath = "play-store/icon.png",
         )
     }
 
-    // スクリーンショットを生成
+    // 通常のスマートフォンサイズのスクリーンショットを生成
     @Config(qualifiers = "w414dp-h736dp-xxhdpi")
     @Test
     fun capturePhone_1() {
         // ...
     }
 
-    // 言語をjaに設定して、スクリーンショットを生成
+    // 言語を日本語（ja）に設定して、スクリーンショットを生成
     @Config(qualifiers = "ja-w414dp-h736dp-xxhdpi")
     @Test
     fun capturePhone_1_ja() {
@@ -68,12 +68,14 @@ class CapturePlayStoreImages {
 
 ## 良かったこと
 
-- AndroidのプロジェクトでGoogle Play Store用の画像を管理できるようになり、Figmaなどの外部ツールへの依存がなくなった
-- UI変更などにより画像を差し替える必要が出てきた時、気が付きやすい
+- Androidプロジェクト内でPlayストア用の画像を管理・生成できるようになり、Figmaなどの外部ツールの利用が減る
+- UIコンポーネントやカラー定義を変更した際、テストを再実行するだけで画像が更新されるため、ストア画像の更新忘れを防止できる
 
 ## まとめ
 
-- TODO: 箇条書きで3つ程度
+- Roborazziをテスト用ではなく、画像生成の用途で利用しても便利
+- Robolectricの `@Config` を活用すれば、Roborazziで生成する画像の設定が可能
+- Androidプロジェクト内でPlayストア用の画像を管理したい場合、Roborazziの利用は有用
 
 ## 参考文献
 
