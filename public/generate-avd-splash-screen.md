@@ -2,13 +2,13 @@
 title: Unitテストでスプラッシュ画面用のAnimatedVectorDrawableを作った話
 tags:
   - Android
+  - robolectric
   - Compose
   - VectorDrawable
   - AnimatedVectorDrawable
-  - robolectric
 private: false
-updated_at: ''
-id: null
+updated_at: '2026-07-11T22:17:25+09:00'
+id: 1dd5d3f28a834af793fd
 organization_url_name: null
 slide: false
 ignorePublish: false
