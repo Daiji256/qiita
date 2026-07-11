@@ -18,7 +18,7 @@ agreed_posting_campaign_term: true
 
 ## はじめに
 
-Androidアプリを開発していると、ロゴ等のアニメーションの実現する方法の1つに `AnimatedVectorDrawable` があります。`AnimatedVectorDrawable` は公式にサポートされたアニメーションで、Android 12以降のスプラッシュ画面などでも利用されています。
+Androidアプリを開発していると、ロゴ等のアニメーションを実現する方法の1つに `AnimatedVectorDrawable` があります。`AnimatedVectorDrawable` は公式にサポートされたアニメーションで、Android 12以降のスプラッシュ画面などでも利用されています。
 
 一般的には、既存のアニメーション作成ツールやデザインツールから `AnimatedVectorDrawable` として出力することが多いでしょう。
 
