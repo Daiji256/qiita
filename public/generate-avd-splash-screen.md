@@ -18,106 +18,106 @@ agreed_posting_campaign_term: true
 
 # Unitテストでスプラッシュ画面用のAnimatedVectorDrawableを作った話
 
-Android 12以降はスプラッシュ画面の扱いには標準の `SplashScreen` APIを使います。スプラッシュ画面でアニメーションをするには、`AnimatedVectorDrawable` を使う必要があります。
+## はじめに
 
-一般的には、アニメーションを作成するツールから `AnimatedVectorDrawable` で出力することが多いでしょう。
+Androidアプリを開発していると、ロゴ等のアニメーションの実現する方法の1つに `AnimatedVectorDrawable` があります。`AnimatedVectorDrawable` は公式にサポートされたアニメーションで、Android 12以降のスプラッシュ画面などでも利用されています。
 
-本記事では「ツール探したり使い方覚えるのめんどくさいし、Kotlinのコードで作れた方がラクだな」と思った筆者による、Unitテストで `AnimatedVectorDrawable` を作ったことを紹介します。`AnimatedVectorDrawable` の詳しい仕様・技術、アニメーションの調整方法については触れません。
+一般的には、のアニメーション作成ツールやデザインツールから `AnimatedVectorDrawable` として出力することが多いでしょう。
+
+しかし、本記事では「ツール探したり使い方覚えるのめんどくさいし、Kotlinのコードで作れた方がラクだな」と考え、Unitテストで `AnimatedVectorDrawable` を生成した話を紹介します。
+
+なお、本記事では `AnimatedVectorDrawable` の詳しい仕様や、アニメーションの細かな調整方法については深く触れません。
 
 ## `AnimatedVectorDrawable` とは
 
-`AnimatedVectorDrawable` とは `VectorDrawable` にアニメーション機能を搭載したものです。基本的には、`VectorDrawable` と同様の仕組みのベクター画像をいくつか用意し、その間の動きを回転・スケールなどで補うという形をとっています。
+`AnimatedVectorDrawable` とは、静的なベクター画像である `VectorDrawable` にアニメーション機能を搭載したものです。基本的には、同じような構造を持つベクター画像をいくつか用意し、その間の形状の変化（モーフィング）や、回転・スケールなどの動きを定義する形をとります。
 
-次節以降で紹介するコードでは `<objectAnimator>` に「開始時のパス（`valueFrom`）」から「終了時のパス（`valueTo`）」のセットをいくつか用意し、それを繋げることでアニメーションを作成します。
-
-### `AnimatedVectorDrawable` として必要なものを定義
-
-TODO
-
-```xml
-<?xml version="1.0" encoding="utf-8"?>
-<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:drawable="@drawable/ic_splash_base">
-    <target
-        android:name="logo_path"
-        android:animation="@animator/anim_splash" />
-</animated-vector>
-```
+本記事で紹介するアプローチでは、XMLの `<objectAnimator>` タグの中に、開始時のパス（`valueFrom`）から終了時のパス（`valueTo`）のセットをコマ送りのようにいくつか用意し、それらを順番に繋げることで滑らかなアニメーションを作成します。
 
 ## Composeの `Path` を使って `VectorDrawable` のためのパスを生成
 
-Composeの `Path` をSVGのパスに変換に変換するための `toSvg()` というAPIが用意されています。`VectorDrawable` のパスはSVGのパスと同等なため、`toSvg()` で `VectorDrawable` のパスを生成できると認識して良いでしょう。
+Composeの `Path` には、SVGのパス文字列に変換するための `toSvg()` というAPIが用意されています。
 
-つまり、Composeの `Path` の扱いに慣れているなら、`VectorDrawable` を作れるといって過言ではありません。
+`VectorDrawable` で使われる `pathData` はSVGのパスと同等です。そのため、Composeの `Path` をこねくり回して `toSvg()` を呼べば、そのまま `VectorDrawable` に使えるパス文字列が生成できます。つまり、Composeの `Path` の扱いに慣れている人なら、コードだけで自由にベクター画像を作れるといえます。
 
-Composeの `Path` を使ってアニメーションを実現しているのであれば、それをコマごとに取り出し、`AnimatedVectorDrawable` のためのパスを集めることができます。
+Composeの `Path` を使ったアニメーションを実現できているのであれば、それを時間経過のコマごとに細かく取り出すことで、`AnimatedVectorDrawable` に必要な `pathData` を簡単に集めることができます。
 
-## Unitテストで `animator` を生成
+## Unitテストで `AnimatedVectorDrawable` を生成
 
-`AnimatedVectorDrawable` はいくつかのファイルに分ける方法と、1つにまとめる方法があります。ここではいくつかのファイルに分ける方法を採用し、アニメーションの根幹部分である `animator` をUnitテストで生成することにします。
+なぜわざわざUnitテストを使うのかというと、単純に環境構築や実行が容易で、Androidエンジニアにとって慣れた実行環境だからです。`Robolectric` を併用することで、Androidのグラフィックス環境をシミュレートしながらCompose環境でのSVG出力までを実行できます。
 
-なぜUnitテストを使うかというと、環境構築や扱いが容易で、最も慣れている場だからです。`Robolectric` を使うことで、Compose環境でSVGの出力までを実行できます。
-
-以下のテストコードを実行することで、`anim_splash.xml` を `res/animator` に書き出すことができました。コードから何をしているかある程度は伝わるかなと思います。
+以下のテストコードを実行することで、`res/drawable` に `animation.xml` を書き出すことができます。
 
 ```kotlin
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
-class GenerateAnimSplash {
+class GenerateAnimatedVectorDrawable {
     @Test
     fun generate() {
         val xml = buildString {
-            // ヘッダー
-            appendLine(
-                """
-                    <?xml version="1.0" encoding="utf-8"?>
-                    <set xmlns:android="http://schemas.android.com/apk/res/android"
-                        android:ordering="sequentially">
-                """.trimIndent(),
-            )
-
-            // パスを生成するためのMorph等
-            val morph = Morph(start = MgShapes.FullCircle.polygon, end = MgShapes.M33.polygon)
-            val duration = 400
+            val morph = Morph(start = MaterialShapes.PixelCircle, end = MaterialShapes.Ghostish)
+            val duration = 1000
             val n = 10
-            fun progress(fraction: Float): Float =
-                CubicBezierEasing(0.2f, 0f, 0f, 1f).transform(fraction = fraction)
+            fun svg(progress: Float): String =
+                morph.toPath(progress = progress).apply {
+                    translate(offset = Offset(0.5f, 0.5f) - this.getBounds().center)
+                }.toSvg()
 
+            appendLine("""<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"""")
+            appendLine("""    xmlns:aapt="http://schemas.android.com/aapt">""")
+
+            appendLine("""    <aapt:attr name="android:drawable">""")
+            appendLine("""        <vector""")
+            appendLine("""            android:height="108dp"""")
+            appendLine("""            android:width="108dp"""")
+            appendLine("""            android:viewportHeight="1"""")
+            appendLine("""            android:viewportWidth="1">""")
+            appendLine("""            <group>""")
+            appendLine("""                <path""")
+            appendLine("""                    android:name="path"""")
+            appendLine("""                    android:fillColor="#000000"""")
+            appendLine("""                    android:pathData="${svg(progress = 0f)}" />""")
+            appendLine("""            </group>""")
+            appendLine("""        </vector>""")
+            appendLine("""    </aapt:attr>""")
+
+            appendLine("""    <target android:name="path">""")
+            appendLine("""        <aapt:attr name="android:animation">""")
+            appendLine("""            <set android:ordering="sequentially">""")
             repeat(n) {
-                // Morphから得られるPathをSVGに変換
-                val valueFrom = morph.toPath(progress(fraction = it.toFloat() / n)).apply {
-                    translate(offset = Offset(0.5f, 0.5f) - this.getBounds().center)
-                }.toSvg()
-                val valueTo = morph.toPath(progress(fraction = (it.toFloat() + 1f) / n)).apply {
-                    translate(offset = Offset(0.5f, 0.5f) - this.getBounds().center)
-                }.toSvg()
-
-                // objectAnimatorを書き込む
-                appendLine("""    <objectAnimator""")
-                appendLine("""        android:duration="${duration / n}"""")
-                appendLine("""        android:propertyName="pathData"""")
-                if (it == 0) appendLine("""        android:startOffset="100"""")
-                appendLine("""        android:valueFrom="$valueFrom"""")
-                appendLine("""        android:valueTo="$valueTo"""")
-                appendLine("""        android:valueType="pathType" />""")
+                appendLine("""                <objectAnimator""")
+                appendLine("""                    android:duration="${duration / n}"""")
+                appendLine("""                    android:propertyName="pathData"""")
+                appendLine("""                    android:valueFrom="${svg(progress = it.toFloat() / n)}"""")
+                appendLine("""                    android:valueTo="${svg(progress = (it.toFloat() + 1f) / n)}"""")
+                appendLine("""                    android:valueType="pathType" />""")
             }
+            appendLine("""            </set>""")
+            appendLine("""        </aapt:attr>""")
+            appendLine("""    </target>""")
 
-            // setを閉じる
-            appendLine("""</set>""")
+            appendLine("""</animated-vector>""")
         }
 
-        // res/animatorに書き出し
-        File("src/main/res/animator/anim_splash.xml").writeText(xml)
+        File("src/main/res/drawable/animation.xml").writeText(xml)
     }
 }
 ```
 
+## サンプルコードで得られる `AnimatedVectorDrawable` のプレビュー
+
+前節のUnitテストを実行して得られた `animation.xml` は以下プレビューのようにアニメーションします。
+
+![サンプルコードで得られるAnimatedVectorDrawableのプレビュー](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/699841/8519aee0-8b09-4940-91f5-2ecf13110fa1.gif)
+
 ## まとめ
 
-- TODO: 箇条書き3つ程度
+- `AnimatedVectorDrawable` のデザインツールを一切使わず、使い慣れたKotlinのコードとComposeの `Path` 計算だけでベクターアニメーションが作れました。
+* **Composeのポテンシャルの高さ：** `Path` から `toSvg()` でパス文字列を吐き出せる特性を活かせば、Androidの伝統的なXML資産の生成にもComposeの恩恵を受けられます。
+- Unitテストなら、Robolectricも利用できるし、慣れたやり方でファイルを作成できる
 
 ## 参考文献
 
-- [AnimatedVectorDrawable | API reference | Android Developers](developer.android.com/reference/android/graphics/drawable/AnimatedVectorDrawable)
+- [AnimatedVectorDrawable | API reference | Android Developers](https://developer.android.com/reference/android/graphics/drawable/AnimatedVectorDrawable)
 - [SplashScreen | API reference | Android Developers](https://developer.android.com/reference/android/window/SplashScreen)
-- [title>Path | API reference | Android Developers](https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Path)
+- [Path | API reference | Android Developers](https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Path)
