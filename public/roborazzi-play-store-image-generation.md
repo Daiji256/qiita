@@ -2,12 +2,12 @@
 title: ComposeとRoborazziでGoogle Play ストア用の画像を生成してみた
 tags:
   - Android
+  - robolectric
   - Compose
   - Roborazzi
-  - Robolectric
 private: false
-updated_at: ''
-id: null
+updated_at: '2026-07-12T00:09:50+09:00'
+id: bd52be069de7e8a70bed
 organization_url_name: null
 slide: false
 ignorePublish: false

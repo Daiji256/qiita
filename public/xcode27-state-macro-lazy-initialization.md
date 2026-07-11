@@ -7,7 +7,7 @@ tags:
   - Observable
   - SwiftUI
 private: false
-updated_at: '2026-07-10T20:13:49+09:00'
+updated_at: '2026-07-12T00:09:49+09:00'
 id: 4dea2aab1b27379e22fc
 organization_url_name: null
 slide: false
