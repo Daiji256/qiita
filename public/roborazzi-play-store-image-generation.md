@@ -1,5 +1,5 @@
 ---
-title: newArticle001
+title: ComposeとRoborazziでGoogle Play ストア用の画像を生成してみた
 tags:
   - Android
   - Compose
@@ -14,8 +14,6 @@ ignorePublish: false
 posting_campaign_uuid: null
 agreed_posting_campaign_term: false
 ---
-
-# ComposeとRoborazziでGoogle Play ストア用の画像を生成してみた
 
 ## はじめに
 
