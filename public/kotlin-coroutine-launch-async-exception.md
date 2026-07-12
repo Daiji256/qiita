@@ -2,12 +2,12 @@
 title: launchとasyncの例外処理のタイミングの違いについて
 tags:
   - Kotlin
-  - Coroutines
-  - 例外処理
   - 非同期処理
+  - 例外処理
+  - coroutines
 private: false
-updated_at: ''
-id: null
+updated_at: '2026-07-13T00:05:10+09:00'
+id: 05681b3bc492898a5598
 organization_url_name: null
 slide: false
 ignorePublish: false
