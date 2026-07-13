@@ -1,5 +1,5 @@
 ---
-title: Play Consoleでアプリ署名のフィンガープリントを確認する（2026年）
+title: Google Play Consoleでアプリ署名のフィンガープリントを確認する（2026年）
 tags:
   - Android
   - fingerprint
@@ -20,13 +20,13 @@ agreed_posting_campaign_term: true
 
 Androidアプリを開発していると、Google MapsやApp Linksなどの外部サービス連携のために、アプリ署名のフィンガープリント（SHA-1やSHA-256）を確認したい場面があります。フィンガープリントは、インストール済みのアプリ（APK）もしくは手元のキーストア（Keystore）からコマンド等を用いて確認する方法が一般的です。
 
-しかし、現在のAndroidアプリ開発ではPlayアプリ署名（Play App Signing）を利用してGoogle Play側で署名鍵を管理することが主流となっており、手元にリリース用のキーストアを持たないことも多いでしょう。そのような場合、正確なフィンガープリントはGoogle Play Console上で確認する必要があります。
+しかし、現在のAndroidアプリ開発ではPlayアプリ署名（Play App Signing）を利用してGoogle Play側で署名鍵を管理することが主流となっており、手元にリリース用のキーストアを持たないことも多いでしょう。そのような場合、正確なフィンガープリントは[Google Play Console](https://play.google.com/console)上で確認する必要があります。
 
-本記事では、2026年7月におけるPlay Console上でのフィンガープリント確認手順を紹介します。
+本記事では、2026年6月19日におけるPlay Console上でのフィンガープリント確認手順を紹介します。
 
 ## Play Console上でアプリ署名のフィンガープリントを確認する方法
 
-最近の[Play Console](https://play.google.com/console)のUI変更により、アプリ署名のフィンガープリント（SHA-1 / SHA-256）を確認する場所が変わりました。
+最近のGoogle Play ConsoleのUI変更により、アプリ署名のフィンガープリント（SHA-1 / SHA-256）を確認する場所が変わりました。
 
 2026年6月19日現在は、以下の手順でフィンガープリントを確認できます：
 
