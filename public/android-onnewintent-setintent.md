@@ -1,5 +1,5 @@
 ---
-title: newArticle001
+title: onNewIntentでsetIntent(intent)を呼ばないとgetIntent()は更新されない
 tags:
   - Android
   - Intent
@@ -14,8 +14,6 @@ ignorePublish: false
 posting_campaign_uuid: 783b7a849caf11eefd91
 agreed_posting_campaign_term: true
 ---
-
-# onNewIntentでsetIntent(intent)を呼ばないとgetIntent()は更新されない
 
 ## はじめに
 
