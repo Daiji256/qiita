@@ -1,5 +1,5 @@
 ---
-title: newArticle001
+title: Kotlinのcontextによる再利用性制限を意識した設計
 tags:
   - Kotlin
   - 設計
@@ -13,8 +13,6 @@ ignorePublish: false
 posting_campaign_uuid: 783b7a849caf11eefd91
 agreed_posting_campaign_term: true
 ---
-
-# Kotlinのcontextによる再利用性制限を意識した設計
 
 ## はじめに
 
