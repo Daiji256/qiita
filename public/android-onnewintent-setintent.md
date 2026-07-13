@@ -19,21 +19,21 @@ agreed_posting_campaign_term: false
 
 ## はじめに
 
-`launchMode` を `singleTask` などに設定することで、起動中にディープリンク等 `Activity` を再利用するアプリはよくあります。このとき、`onNewIntent` の `intent` からディープリンクで起動した時に受け取れるリンクなどを受け取ります。
+`launchMode` を `singleTask` や `singleTop` に設定し、アプリ起動中に通知やディープリンクから `Activity` を再利用する設計はよく使われます。このとき、新しく届いたパラメータは `onNewIntent(intent)` の `intent` から受け取ることができます。
 
-基本的には問題はありませんが、`onResume` などで `intent`（`getIntent()`）を呼び出したときにディープリンクを受け取ったあとでもアプリ起動時のものであることに気がつきました。
+基本的にはこれで問題ないのです。しかし `onResume` などで `intent`（または `getIntent()`）を呼び出す場合、ディープリンクを受け取った後でもアプリ初回起動時の `intent` になります。
 
-この `getIntent()` で取得できる `Intent` を更新する方法を紹介します。
+本記事では、この `getIntent()` で取得できる `Intent` を更新する方法を紹介します。
 
-## なぜ必要なのか？
+## なぜ `intent` が更新されないのか
 
-Androidの仕様上、再利用された `Activity` に新しい `Intent` が届いても、`onNewIntent` が呼ばれるだけで `Activity`内部で保持する `intent` は（`getIntent()`の参照先）は自動で上書きされません。
+Androidの仕様上、再利用された `Activity` に新しい `Intent` が届いても、`onNewIntent` が呼ばれるだけで、`Activity` 内部が保持している `intent` は自動で更新されません。
 
-そのため、ディープリンクを開くなどして `Activity` を再利用した後でも、`onResume` などで `intent` を参照した時、ディープリンク起動時の `Intent` ではなく、起動時の `Intent` になります。
+そのため、ディープリンク等からアプリを再利用した後に、`onResume` などで別途 `intent` を参照しても、最初にアプリを起動したときの古いものになります。
 
 ## `intent` を更新する方法
 
-`onNewIntent` をオーバーライドし、`setIntent(intent)` を実行して、`Activity` が保持する `intent` を更新します。
+`intent` を更新する方法はシンプルで、`onNewIntent` をオーバーライドし `setIntent(intent)` を実行することです。これにより、`Activity` が保持する `intent` が更新されるため、以降どのタイミングで `intent` を参照しても呼び出しても、更新後の値を参照できます。
 
 ```kotlin
 class MainActivity : ComponentActivity() {
@@ -41,21 +41,21 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        this.intent = intent // setIntent(intent)
+        this.intent = intent // setIntent(intent) と同等
     }
 }
 ```
 
-## 注意
+## 無条件に更新すれば良いわけではない
 
-必ずしも `onNewIntent` で `setIntent(intent)` を呼び出すことを推奨しているわけではありません。`onNewIntent` が呼ばれる条件はアプリによって様々です。場合によっては一時的な処理や無視だけで十分で、`intent` の更新は不要な場合があります。
+必ずしもすべてのケースで `onNewIntent` での `setIntent(intent)` が推奨されるわけではありません。`onNewIntent` が呼ばれる条件はアプリによって様々です。場合によっては一時的な処理だけで十分で、`intent` の更新は不要な場合があります。
 
-アプリの仕様・要件に合わせて、正しくハンドリングする必要があります。
+アプリの仕様・要件に合わせて、正しく使い分ける必要があります。
 
 ## まとめ
 
-- `Activity` が再利用された際、自動で `intent` は更新されない
-- `onNewIntent` で `setIntent(intent)` を実行することで、`intent` を更新できる
+- `Activity` が再利用された際、自動で `getIntent()` の中身は更新されない
+- `onNewIntent` で `setIntent(intent)` を実行することで、保持する `intent` を更新できる
 
 ## 参考文献
 
