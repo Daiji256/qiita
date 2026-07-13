@@ -16,6 +16,8 @@ posting_campaign_uuid: 783b7a849caf11eefd91
 agreed_posting_campaign_term: true
 ---
 
+## はじめに
+
 `androidx.graphics:graphics-shapes:1.1.0` にて追加された `SvgPathParser.parseFeatures()` を使用した際、SVGのパスが正しくパースされず、形状が歪むバグに遭遇しました。
 
 本記事では、その原因とコード上で解決する方法を紹介します。
