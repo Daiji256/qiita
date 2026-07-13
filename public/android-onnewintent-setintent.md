@@ -2,12 +2,12 @@
 title: onNewIntentでsetIntent(intent)を呼ばないとgetIntent()は更新されない
 tags:
   - Android
+  - Activity
   - Intent
   - onNewIntent
-  - Activity
 private: false
-updated_at: ''
-id: null
+updated_at: '2026-07-13T20:42:35+09:00'
+id: 588fb991c56b01b57f22
 organization_url_name: null
 slide: false
 ignorePublish: false
