@@ -16,6 +16,8 @@ posting_campaign_uuid: 783b7a849caf11eefd91
 agreed_posting_campaign_term: true
 ---
 
+## はじめに
+
 最近SwiftUIを学んでいたら、`View` が再評価されるたびに、状態を保持しているにもかかわらずインスタンスが無駄に生成されるという現象に違和感を覚えました。調べたところ、この問題は他のエンジニアも感じている既知の問題だったようです。
 
 iOS 17で導入されたObservationフレームワーク（`@Observable` と `@State`）は、従来の `ObservableObject` に代わる新しい状態管理を提供しました。しかし、Xcode 26までの環境では、無駄なインスタンス生成というパフォーマンス上の課題が残されていました。
