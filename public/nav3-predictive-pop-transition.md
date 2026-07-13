@@ -1,5 +1,5 @@
 ---
-title: Nav3用のpredictivePopTransitionSpecがそれっぽくするための実装
+title: Nav3用の汎用的なpredictivePopTransitionSpecを実装した
 tags:
   - Android
   - Compose
@@ -16,13 +16,17 @@ posting_campaign_uuid: 783b7a849caf11eefd91
 agreed_posting_campaign_term: true
 ---
 
+## はじめに
+
 Navigation 3（Nav3）の `NavDisplay` では、通常の戻るアニメーション（`popTransitionSpec`）と、予測型「戻る」（Predictive back）アニメーション（`predictivePopTransitionSpec`）を別々に設定できるようになりました。
 
-ここでは、それっぽい `predictivePopTransitionSpec` が書けたので備忘録として残します。
+本記事では、それっぽい汎用的な `predictivePopTransitionSpec` が書けたので共有します。
+
+## 意図と実装
 
 Googleの意図としては「状況に適したアニメーションを設定してほしい」ということだと思われます。しかし、すべての画面遷移で個別に考えるのは現実的ではないため、まずはアプリ全体で使える「標準的なもの」を1つ用意するのが良いと考えました。
 
-ここで紹介するのは、`Activity` の予測型「戻る」に適用される「あのデフォルト画面遷移」っぽい雰囲気になる実装です。完全に一致するわけではありませんが、手軽にそれっぽくしたい時には使えるかと思います。
+ここで紹介するのは、`Activity` の予測型「戻る」に適用される「あのデフォルト画面遷移」っぽい雰囲気になる実装です。完全に一致するわけではありませんが、特別なアニメーションを設定しない通常の画面遷移の場合に役立つと思います。
 
 ![予測型「戻る」の動き](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/699841/a7429428-eb22-438a-8781-4c574c8c5e25.gif)
 
