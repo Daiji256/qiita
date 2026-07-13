@@ -20,7 +20,7 @@ agreed_posting_campaign_term: true
 
 Navigation 3（Nav3）の `NavDisplay` では、通常の戻るアニメーション（`popTransitionSpec`）と、予測型「戻る」（Predictive back）アニメーション（`predictivePopTransitionSpec`）を別々に設定できるようになりました。
 
-本記事では、それっぽい汎用的な `predictivePopTransitionSpec` が書けたので共有します。
+本記事では、それっぽい汎用的な `predictivePopTransitionSpec` を実装したので共有します。
 
 ## 意図と実装
 
